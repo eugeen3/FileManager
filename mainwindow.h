@@ -25,10 +25,11 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
-    void initList();
-    void initTable();
+    void initFilesList();
+    void initFilesTable();
     void initFiles();
     void initDirs();
+    void initTree();
     void cleanLayout(QLayout*);
 
 private:

@@ -13,15 +13,10 @@ MainWindow::MainWindow(QWidget *parent) :
     initFiles();
     initDirs();
 
-    filesList = new QListView();
-    filesList->setModel(files);
+    initFilesList();
     ui->rightlayout->addWidget(filesList);
 
-    ui->treeView->setModel(directories);
-    ui->treeView->hideColumn(1);
-    ui->treeView->hideColumn(2);
-    ui->treeView->hideColumn(3);
-    ui->treeView->header()->hide();
+    initTree();
 
     connect(filesList, &QAbstractItemView::doubleClicked, this, &MainWindow::fileSystemDoubleClicked);
 }
@@ -41,6 +36,25 @@ void MainWindow::initDirs() {
     directories = new QFileSystemModel(this);
     directories->setFilter(QDir::NoDotAndDotDot | QDir::AllDirs);
     directories->setRootPath(QDir::rootPath());
+}
+
+void MainWindow::initFilesList() {
+    filesList = new QListView();
+    filesList->setModel(files);
+}
+
+void MainWindow::initFilesTable() {
+    tableView = new QTableView();
+    tableView->setModel(files);
+    tableView->verticalHeader()->hide();
+}
+
+void MainWindow::initTree() {
+    ui->treeView->setModel(directories);
+    ui->treeView->hideColumn(1);
+    ui->treeView->hideColumn(2);
+    ui->treeView->hideColumn(3);
+    ui->treeView->header()->hide();
 }
 
 void MainWindow::on_treeView_clicked(const QModelIndex &index)
@@ -69,16 +83,9 @@ void MainWindow::on_list_triggered()
 {
     cleanLayout(ui->rightlayout);
 
-    if (filesList == nullptr)
-        filesList = new QListView();
+    if (files == nullptr) initFiles();
+    if (filesList == nullptr) initFilesList();
 
-    if (files == nullptr) {
-        files = new QFileSystemModel(this);
-        files->setFilter(QDir::Files | QDir::Dirs | QDir::NoDot);
-        files->setRootPath(QDir::rootPath());
-    }
-
-    filesList->setModel(files);
     ui->rightlayout->addWidget(filesList);
 }
 
@@ -86,17 +93,9 @@ void MainWindow::on_table_triggered()
 {
     cleanLayout(ui->rightlayout);
 
-    if (tableView == nullptr)
-        tableView = new QTableView();
+    if (files == nullptr) initFiles();
+    if (filesList == nullptr) initFilesTable();
 
-    if (files == nullptr) {
-        files = new QFileSystemModel(this);
-        files->setFilter(QDir::Files | QDir::Dirs | QDir::NoDot);
-        files->setRootPath(QDir::rootPath());
-    }
-
-    tableView->setModel(files);
-    tableView->verticalHeader()->hide();
     ui->rightlayout->addWidget(tableView);
 }
 

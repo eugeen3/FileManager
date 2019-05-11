@@ -31,12 +31,13 @@ public:
     void initDirs();
     void initTree();
     void cleanLayout(QLayout*);
+    QWidget* getFilesWidget();
 
 private:
     Ui::MainWindow *ui;
     QFileSystemModel *directories;
     QFileSystemModel *files;
-    QTableView *tableView;
+    QTableView *filesTable;
     QListView *filesList;
 
 private slots:

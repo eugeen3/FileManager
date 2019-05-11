@@ -44,9 +44,9 @@ void MainWindow::initFilesList() {
 }
 
 void MainWindow::initFilesTable() {
-    tableView = new QTableView();
-    tableView->setModel(files);
-    tableView->verticalHeader()->hide();
+    filesTable = new QTableView();
+    filesTable->setModel(files);
+    filesTable->verticalHeader()->hide();
 }
 
 void MainWindow::initTree() {
@@ -85,7 +85,11 @@ void MainWindow::on_list_triggered()
 
     if (files == nullptr) initFiles();
     if (filesList == nullptr) initFilesList();
+   /* if(filesTable != nullptr)
+        disconnect(filesTable, &QAbstractItemView::doubleClicked, this, &MainWindow::fileSystemDoubleClicked);
 
+    connect(filesList, &QAbstractItemView::doubleClicked, this, &MainWindow::fileSystemDoubleClicked);
+*/
     ui->rightlayout->addWidget(filesList);
 }
 
@@ -95,16 +99,22 @@ void MainWindow::on_table_triggered()
 
     if (files == nullptr) initFiles();
     if (filesList == nullptr) initFilesTable();
+    /*if(filesTable != nullptr)
+        disconnect(filesList, &QAbstractItemView::doubleClicked, this, &MainWindow::fileSystemDoubleClicked);
 
-    ui->rightlayout->addWidget(tableView);
+    connect(filesTable, &QAbstractItemView::doubleClicked, this, &MainWindow::fileSystemDoubleClicked);
+*/
+    ui->rightlayout->addWidget(filesTable);
 }
 
 void MainWindow::cleanLayout(QLayout *layout) {
     QLayoutItem *item;
-    item = layout->itemAt(1);
-    layout->removeItem(item);
-    layout->removeWidget(item->widget());
-    delete item;
+    if(layout->takeAt(1) != 0) {
+        item = layout->takeAt(1);
+        layout->removeItem(item);
+        layout->removeWidget(item->widget());
+        delete item;
+    }
 }
 
 void MainWindow::on_goToPath_returnPressed()
@@ -136,4 +146,8 @@ void MainWindow::on_CreateFile_triggered()
     dialogWindow.setModal(true);
     dialogWindow.exec();
     //TODO
+}
+
+QWidget* MainWindow::getFilesWidget() {
+
 }

@@ -12,6 +12,7 @@
 #include <QListView>
 #include <QMessageBox>
 #include <QtDebug>
+#include <qlistview.h>
 
 namespace Ui {
 class MainWindow;
@@ -26,25 +27,25 @@ public:
     ~MainWindow();
     void initList();
     void initTable();
+    void initFiles();
+    void initDirs();
     void cleanLayout(QLayout*);
-public:
+
+private:
     Ui::MainWindow *ui;
     QFileSystemModel *directories;
     QFileSystemModel *files;
-   // QTreeView *treeView;
     QTableView *tableView;
-    QListView *listView;
+    QListView *filesList;
 
 private slots:
-    void on_treeView_clicked(const QModelIndex &index);
-    void fileSystemDoubleClicked(const QModelIndex &index);
+    void on_treeView_clicked(const QModelIndex &);
+    void fileSystemDoubleClicked(const QModelIndex &);
     void on_table_triggered();
     void on_list_triggered();
     void on_goToPath_returnPressed();
     void on_searchInCurDir_returnPressed();
     void on_CreateFile_triggered();
-signals:
-    void doubleClicked(const QModelIndex &index);
 };
 
 #endif // MAINWINDOW_H

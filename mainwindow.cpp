@@ -10,26 +10,20 @@ MainWindow::MainWindow(QWidget *parent) :
 
     QString rootPath = QDir::rootPath();
 
-    directories = new QFileSystemModel(this);
-    directories->setFilter(QDir::NoDotAndDotDot | QDir::AllDirs);
-    directories->setRootPath(QDir::rootPath());
+    initFiles();
+    initDirs();
 
-    files = new QFileSystemModel(this);
-    files->setFilter(QDir::Files | QDir::Dirs | QDir::NoDot);
-    files->setRootPath(rootPath);
+    filesList = new QListView();
+    filesList->setModel(files);
+    ui->rightlayout->addWidget(filesList);
 
     ui->treeView->setModel(directories);
-    listView = new QListView();
-    listView->setModel(files);
-    ui->rightlayout->addWidget(listView);
-
     ui->treeView->hideColumn(1);
     ui->treeView->hideColumn(2);
     ui->treeView->hideColumn(3);
     ui->treeView->header()->hide();
 
-
-    connect(listView, SIGNAL(doubleClicked()), this, SLOT(fileSystemDoubleClicked()));
+    connect(filesList, &QAbstractItemView::doubleClicked, this, &MainWindow::fileSystemDoubleClicked);
 }
 
 MainWindow::~MainWindow()
@@ -37,11 +31,22 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+void MainWindow::initFiles() {
+    files = new QFileSystemModel(this);
+    files->setFilter(QDir::Files | QDir::Dirs | QDir::NoDot);
+    files->setRootPath(QDir::rootPath());
+}
+
+void MainWindow::initDirs() {
+    directories = new QFileSystemModel(this);
+    directories->setFilter(QDir::NoDotAndDotDot | QDir::AllDirs);
+    directories->setRootPath(QDir::rootPath());
+}
 
 void MainWindow::on_treeView_clicked(const QModelIndex &index)
 {
     QString path = directories->fileInfo(index).absoluteFilePath();
-    listView->setRootIndex(files->setRootPath(path));
+    filesList->setRootIndex(files->setRootPath(path));
     ui->goToPath->setText(path);
 }
 
@@ -50,7 +55,7 @@ void MainWindow::fileSystemDoubleClicked(const QModelIndex &index)
     QString path = files->fileInfo(index).absoluteFilePath();
     if(files->fileInfo(index).isDir()) {
         qDebug() << "STR" << path;
-        listView->setRootIndex(files->setRootPath(path));
+        filesList->setRootIndex(files->setRootPath(path));
         ui->goToPath->setText(path);
     }
     else if (files->fileInfo(index).isFile()) {
@@ -64,8 +69,8 @@ void MainWindow::on_list_triggered()
 {
     cleanLayout(ui->rightlayout);
 
-    if (listView == nullptr)
-        listView = new QListView();
+    if (filesList == nullptr)
+        filesList = new QListView();
 
     if (files == nullptr) {
         files = new QFileSystemModel(this);
@@ -73,8 +78,8 @@ void MainWindow::on_list_triggered()
         files->setRootPath(QDir::rootPath());
     }
 
-    listView->setModel(files);
-    ui->rightlayout->addWidget(listView);
+    filesList->setModel(files);
+    ui->rightlayout->addWidget(filesList);
 }
 
 void MainWindow::on_table_triggered()
@@ -111,7 +116,7 @@ void MainWindow::on_goToPath_returnPressed()
 
     qDebug() << "STR" << sPath;
     if (dPath.exists() && fPath.isDir()){
-        listView->setRootIndex(files->setRootPath(sPath));
+        filesList->setRootIndex(files->setRootPath(sPath));
         ui->goToPath->setText(sPath);
     } else if (fPath.exists() && fPath.isFile()) {
         //Fix spaces and cyrillic symbols in path
@@ -120,7 +125,6 @@ void MainWindow::on_goToPath_returnPressed()
         QMessageBox::critical(this, "FileManager", "Не удалось перейти по указаному пути");
     }
 }
-
 
 void MainWindow::on_searchInCurDir_returnPressed()
 {

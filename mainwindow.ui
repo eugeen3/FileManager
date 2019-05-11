@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>741</width>
-    <height>513</height>
+    <width>750</width>
+    <height>500</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -57,6 +57,12 @@
          <enum>Qt::Horizontal</enum>
         </property>
         <widget class="QTreeView" name="treeView">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="minimumSize">
           <size>
            <width>100</width>
@@ -65,7 +71,7 @@
          </property>
          <property name="maximumSize">
           <size>
-           <width>1000000</width>
+           <width>100000</width>
            <height>16777215</height>
           </size>
          </property>
@@ -97,16 +103,6 @@
             </property>
            </widget>
           </item>
-          <item>
-           <widget class="QListView" name="listView">
-            <property name="minimumSize">
-             <size>
-              <width>100</width>
-              <height>0</height>
-             </size>
-            </property>
-           </widget>
-          </item>
          </layout>
         </widget>
        </widget>
@@ -120,8 +116,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>741</width>
-     <height>21</height>
+     <width>750</width>
+     <height>20</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu">
@@ -134,6 +130,8 @@
     <property name="title">
      <string>Вид</string>
     </property>
+    <addaction name="list"/>
+    <addaction name="table"/>
    </widget>
    <addaction name="menu"/>
    <addaction name="menu_2"/>
@@ -150,6 +148,16 @@
   <action name="CreateFile">
    <property name="text">
     <string>Создать новый</string>
+   </property>
+  </action>
+  <action name="list">
+   <property name="text">
+    <string>Список</string>
+   </property>
+  </action>
+  <action name="table">
+   <property name="text">
+    <string>Таблица</string>
    </property>
   </action>
  </widget>

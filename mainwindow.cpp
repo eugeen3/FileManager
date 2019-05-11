@@ -18,17 +18,18 @@ MainWindow::MainWindow(QWidget *parent) :
     files->setFilter(QDir::Files | QDir::Dirs | QDir::NoDot);
     files->setRootPath(rootPath);
 
-    //treeView = new QTreeView(this);
-    //filesList = new QListView(this);
     ui->treeView->setModel(directories);
-    ui->listView->setModel(files);
+    listView = new QListView();
+    listView->setModel(files);
+    ui->rightlayout->addWidget(listView);
+
     ui->treeView->hideColumn(1);
     ui->treeView->hideColumn(2);
     ui->treeView->hideColumn(3);
     ui->treeView->header()->hide();
 
-    //ui->horizontalLayout_2->addWidget(filesList);
-    //ui->horizontalLayout->addWidget(treeView);
+
+    connect(listView, SIGNAL(doubleClicked()), this, SLOT(fileSystemDoubleClicked()));
 }
 
 MainWindow::~MainWindow()
@@ -36,19 +37,20 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+
 void MainWindow::on_treeView_clicked(const QModelIndex &index)
 {
     QString path = directories->fileInfo(index).absoluteFilePath();
-    ui->listView->setRootIndex(files->setRootPath(path));
+    listView->setRootIndex(files->setRootPath(path));
     ui->goToPath->setText(path);
 }
 
-void MainWindow::on_listView_doubleClicked(const QModelIndex &index)
+void MainWindow::fileSystemDoubleClicked(const QModelIndex &index)
 {
     QString path = files->fileInfo(index).absoluteFilePath();
     if(files->fileInfo(index).isDir()) {
         qDebug() << "STR" << path;
-        ui->listView->setRootIndex(files->setRootPath(path));
+        listView->setRootIndex(files->setRootPath(path));
         ui->goToPath->setText(path);
     }
     else if (files->fileInfo(index).isFile()) {
@@ -57,39 +59,49 @@ void MainWindow::on_listView_doubleClicked(const QModelIndex &index)
         QDesktopServices::openUrl(path);
     }
 }
-/*
+
 void MainWindow::on_list_triggered()
 {
-    cleanLayout(ui->horizontalLayout_2);
-    //ui->horizontalLayout_2->removeWidget(this);
-    //delete this;
-    if (filesList == nullptr)
-        filesList = new QListView();
-    ui->horizontalLayout_2->addWidget(filesList);
+    cleanLayout(ui->rightlayout);
+
+    if (listView == nullptr)
+        listView = new QListView();
+
+    if (files == nullptr) {
+        files = new QFileSystemModel(this);
+        files->setFilter(QDir::Files | QDir::Dirs | QDir::NoDot);
+        files->setRootPath(QDir::rootPath());
+    }
+
+    listView->setModel(files);
+    ui->rightlayout->addWidget(listView);
 }
 
-void MainWindow::on_tree_triggered()
+void MainWindow::on_table_triggered()
 {
-    cleanLayout(ui->horizontalLayout_2);
-    //ui->horizontalLayout_2->removeWidget(this);
-    //delete this;
-    if (filesTable == nullptr)
-        filesTable = new QTableView();
-    ui->horizontalLayout_2->addWidget(filesTable);
+    cleanLayout(ui->rightlayout);
+
+    if (tableView == nullptr)
+        tableView = new QTableView();
+
+    if (files == nullptr) {
+        files = new QFileSystemModel(this);
+        files->setFilter(QDir::Files | QDir::Dirs | QDir::NoDot);
+        files->setRootPath(QDir::rootPath());
+    }
+
+    tableView->setModel(files);
+    tableView->verticalHeader()->hide();
+    ui->rightlayout->addWidget(tableView);
 }
 
 void MainWindow::cleanLayout(QLayout *layout) {
     QLayoutItem *item;
-    while( (item = layout->itemAt(0)) )
-        {
-                layout->removeItem( item );
-                layout->removeWidget(item->widget());
-                //delete item->widget();
-                delete item;
-                //layout->update();
-        }
+    item = layout->itemAt(1);
+    layout->removeItem(item);
+    layout->removeWidget(item->widget());
+    delete item;
 }
-*/
 
 void MainWindow::on_goToPath_returnPressed()
 {
@@ -99,7 +111,7 @@ void MainWindow::on_goToPath_returnPressed()
 
     qDebug() << "STR" << sPath;
     if (dPath.exists() && fPath.isDir()){
-        ui->listView->setRootIndex(files->setRootPath(sPath));
+        listView->setRootIndex(files->setRootPath(sPath));
         ui->goToPath->setText(sPath);
     } else if (fPath.exists() && fPath.isFile()) {
         //Fix spaces and cyrillic symbols in path

@@ -48,17 +48,20 @@
       <item>
        <widget class="QSplitter" name="splitter">
         <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
+        </property>
+        <property name="acceptDrops">
+         <bool>false</bool>
         </property>
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
         </property>
         <widget class="QTreeView" name="treeView">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
+          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
@@ -86,8 +89,8 @@
          </attribute>
         </widget>
         <widget class="QWidget" name="layoutWidget">
-         <layout class="QVBoxLayout" name="rightlayout">
-          <item>
+         <layout class="QGridLayout" name="rightLayout">
+          <item row="0" column="0" colspan="2">
            <widget class="QLineEdit" name="searchInCurDir">
             <property name="minimumSize">
              <size>

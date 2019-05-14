@@ -15,6 +15,7 @@
 #include <qlistview.h>
 #include <cstring>
 #include <algorithm>
+#include <QPushButton>
 
 namespace Ui {
 class MainWindow;
@@ -32,6 +33,7 @@ public:
     void initFiles();
     void initDirs();
     void initTree();
+    void initButtons();
     void cleanLayout(QLayout*);
     QWidget* getFilesWidget();
     void getValidPath(QString &);
@@ -41,6 +43,8 @@ private:
     QFileSystemModel *files;
     QTableView *filesTable;
     QListView *filesList;
+    QPushButton *goBack;
+    QPushButton *toTheRoot;
     int viewModel;
 
 private slots:
@@ -51,6 +55,8 @@ private slots:
     void on_goToPath_returnPressed();
     void on_searchInCurDir_returnPressed();
     void on_CreateFile_triggered();
+    void dirUp();
+    void dirRoot();
 };
 
 #endif // MAINWINDOW_H

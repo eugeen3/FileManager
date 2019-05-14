@@ -13,6 +13,8 @@
 #include <QMessageBox>
 #include <QtDebug>
 #include <qlistview.h>
+#include <cstring>
+#include <algorithm>
 
 namespace Ui {
 class MainWindow;
@@ -32,13 +34,14 @@ public:
     void initTree();
     void cleanLayout(QLayout*);
     QWidget* getFilesWidget();
-
+    void getValidPath(QString &);
 private:
     Ui::MainWindow *ui;
     QFileSystemModel *directories;
     QFileSystemModel *files;
     QTableView *filesTable;
     QListView *filesList;
+    int viewModel;
 
 private slots:
     void on_treeView_clicked(const QModelIndex &);

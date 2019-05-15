@@ -9,21 +9,19 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     QString rootPath = QDir::rootPath();
+    //QString rootPathLabel = "Компьютер";
 
     initFiles();
     initDirs();
     initButtons();
-    //initFilesList();
-    //ui->rightlayout->addWidget(filesList);
-    //viewModel = 1;
+    initFilesList();
     initFilesTable();
-    ui->rightLayout->addWidget(filesTable, 2, 0, 1, 2);
-    viewModel = 2;
-
     initTree();
+    ui->goToPath->setText(rootPathLabel);
+    filesCurrentView = filesTable;
+    ui->rightLayout->addWidget(filesCurrentView, 2, 0, 1, 2);
 
-    //connect(filesList, &QAbstractItemView::doubleClicked, this, &MainWindow::fileSystemDoubleClicked);
-    connect(filesTable, &QAbstractItemView::doubleClicked, this, &MainWindow::fileSystemDoubleClicked);
+    connect(filesCurrentView, &QAbstractItemView::doubleClicked, this, &MainWindow::fileSystemDoubleClicked);
     connect(goBack, &QPushButton::clicked, this, &MainWindow::dirUp);
     connect(toTheRoot, &QPushButton::clicked, this, &MainWindow::dirRoot);
 }
@@ -36,13 +34,13 @@ MainWindow::~MainWindow()
 void MainWindow::initFiles() {
     files = new QFileSystemModel(this);
     files->setFilter(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot);
-    files->setRootPath(QDir::rootPath());
+    files->setRootPath(rootPath);
 }
 
 void MainWindow::initDirs() {
     directories = new QFileSystemModel(this);
     directories->setFilter(QDir::NoDotAndDotDot | QDir::AllDirs);
-    directories->setRootPath(QDir::rootPath());
+    directories->setRootPath(rootPath);
 }
 
 void MainWindow::initFilesList() {
@@ -69,10 +67,10 @@ void MainWindow::initTree() {
 
 void MainWindow::initButtons() {
     goBack = new QPushButton("Назад");
-    goBack->setMinimumSize(170, 20);
+    goBack->setMinimumSize(150, 20);
 
     toTheRoot = new QPushButton("Корневая папка");
-    toTheRoot->setMinimumSize(170, 20);
+    toTheRoot->setMinimumSize(180, 20);
 
     ui->rightLayout->addWidget(goBack, 1, 0);
     ui->rightLayout->addWidget(toTheRoot, 1, 1);
@@ -81,11 +79,7 @@ void MainWindow::initButtons() {
 void MainWindow::on_treeView_clicked(const QModelIndex &index)
 {
     QString path = directories->fileInfo(index).absoluteFilePath();
-    switch (viewModel)
-    {
-    case 1: filesList->setRootIndex(files->setRootPath(path));
-    case 2: filesTable->setRootIndex(files->setRootPath(path));
-    }
+    filesCurrentView->setRootIndex(files->setRootPath(path));
     ui->goToPath->setText(path);
 }
 
@@ -94,11 +88,7 @@ void MainWindow::fileSystemDoubleClicked(const QModelIndex &index)
     QString path = files->fileInfo(index).absoluteFilePath();
     if(files->fileInfo(index).isDir()) {
         qDebug() << "STR" << path;
-        switch (viewModel)
-        {
-        case 1: filesList->setRootIndex(files->setRootPath(path));
-        case 2: filesTable->setRootIndex(files->setRootPath(path));
-        }
+        filesCurrentView->setRootIndex(files->setRootPath(path));
         ui->goToPath->setText(path);
     }
     else if (files->fileInfo(index).isFile()) {
@@ -110,41 +100,37 @@ void MainWindow::fileSystemDoubleClicked(const QModelIndex &index)
 
 void MainWindow::on_list_triggered()
 {
-    cleanLayout(ui->rightLayout);
-    if(filesTable != nullptr)
-            disconnect(filesTable, &QAbstractItemView::doubleClicked,
-                       this, &MainWindow::fileSystemDoubleClicked);
-
-    if (files == nullptr) initFiles();
-    if (filesList == nullptr) initFilesList();
-
-    connect(filesList, &QAbstractItemView::doubleClicked, this, &MainWindow::fileSystemDoubleClicked);
-    ui->rightLayout->addWidget(filesList);
+    if (filesCurrentView != filesList) {
+        disconnect(filesCurrentView, &QAbstractItemView::doubleClicked, this, &MainWindow::fileSystemDoubleClicked);
+        cleanLayout(ui->rightLayout);
+        if (filesTable == nullptr) initFilesList();
+        filesCurrentView = filesList;
+        ui->rightLayout->addWidget(filesList, 2, 0, 1, 2);
+        connect(filesCurrentView, &QAbstractItemView::doubleClicked, this, &MainWindow::fileSystemDoubleClicked);
+    }
 }
 
 void MainWindow::on_table_triggered()
 {
-    cleanLayout(ui->rightLayout);
-    if(filesTable != nullptr)
-            disconnect(filesList, &QAbstractItemView::doubleClicked,
-                       this, &MainWindow::fileSystemDoubleClicked);
-
-    if (files == nullptr) initFiles();
-    if (filesList == nullptr) initFilesTable();
-
-    connect(filesTable, &QAbstractItemView::doubleClicked, this, &MainWindow::fileSystemDoubleClicked);
-    ui->rightLayout->addWidget(filesTable);
+    if (filesCurrentView != filesTable) {
+        disconnect(filesCurrentView, &QAbstractItemView::doubleClicked, this, &MainWindow::fileSystemDoubleClicked);
+        cleanLayout(ui->rightLayout);
+        if (filesTable == nullptr) initFilesTable();
+        filesCurrentView = filesTable;
+        ui->rightLayout->addWidget(filesTable, 2, 0, 1, 2);
+        connect(filesCurrentView, &QAbstractItemView::doubleClicked, this, &MainWindow::fileSystemDoubleClicked);
+    }
 }
 
 void MainWindow::cleanLayout(QLayout *layout) {
     if (layout) {
-        if(layout->count() > 1){
-                QLayoutItem *item = layout->takeAt(1);
-                QWidget* widget = item->widget();
-                if(widget)
-                    delete widget;
-                delete item;
-            }
+        if(layout->count() > 3){
+            QLayoutItem *item = layout->takeAt(3);
+            QWidget* widget = item->widget();
+            if(widget)
+                delete widget;
+            delete item;
+        }
     }
 }
 
@@ -154,17 +140,33 @@ void MainWindow::on_goToPath_returnPressed()
     QDir dPath = ui->goToPath->text();
     QFileInfo fPath = ui->goToPath->text();
 
+    QTextCodec *codec_1251 = QTextCodec::codecForName("Windows-1251");
+    QByteArray baPath = sPath.toUtf8();
+    QString string = codec_1251->toUnicode(baPath);
+    qDebug() << "BAPATH" << baPath;
+
     qDebug() << "STR" << sPath;
-    if (dPath.exists() && fPath.isDir()){
-        switch (viewModel)
-        {
-        case 1: filesList->setRootIndex(files->setRootPath(sPath));
-        case 2: filesTable->setRootIndex(files->setRootPath(sPath));
-        }
+    if(QString::compare(sPath, rootPathLabel, Qt::CaseInsensitive) == 0) {
+        qDebug() << "GO TO ROOT";
+        filesCurrentView->setRootIndex(files->setRootPath(rootPath));
+        return;
+    }
+    if (dPath.exists() && fPath.isDir()) {
+        filesCurrentView->setRootIndex(files->setRootPath(sPath));
         ui->goToPath->setText(sPath);
     } else if (fPath.exists() && fPath.isFile()) {
         //Fix spaces and cyrillic symbols in path
-        QDesktopServices::openUrl(sPath);
+
+        /*
+        QUrl uPath;
+        uPath.QUrl::setUrl(sPath);
+        qDebug() << uPath;
+        if (!QUrl(sPath).isValid()) {
+            qDebug() << "Invalid";
+            getValidPath(sPath);
+        }
+        */
+        QDesktopServices::openUrl(QUrl(baPath, QUrl::TolerantMode));
     } else {
         QMessageBox::critical(this, "FileManager", "Не удалось перейти по указаному пути");
     }
@@ -191,45 +193,42 @@ void MainWindow::dirUp() {
         for (; sPath[i] != '/'; i--) {
             sPath[i] = sPath[i + 1];
         }
-        sPath[i] = sPath[i + 1];
         qDebug() << "CDUP" << sPath;
-        switch (viewModel)
-        {
-        case 1: filesList->setRootIndex(files->setRootPath(sPath));
-        case 2: filesTable->setRootIndex(files->setRootPath(sPath));
-        }
+        filesCurrentView->setRootIndex(files->setRootPath(sPath));
+        ui->goToPath->setText(sPath);
     }
+    else {
+        dirRoot();
+    }
+    filesCurrentView->update();
 }
 
 void MainWindow::dirRoot() {
-    QString sPath = QDir::rootPath();
-    switch (viewModel)
-    {
-    case 1: filesList->setRootIndex(files->setRootPath(sPath));
-    case 2: filesTable->setRootIndex(files->setRootPath(sPath));
-    }
+    ui->goToPath->setText(rootPathLabel);
+    filesCurrentView->setRootIndex(files->setRootPath(rootPath));
 }
+
 void MainWindow::getValidPath(QString &path) {
 #ifdef __linux__
     size_t found = path.find("%20");
-        if (found != std::string::npos) {
-            int i = found;
-            while (i != path.length()) {
-                size_t found = path.find("%20");
-                if (found != std::string::npos) {
-                    i = found;
-                    path[i] = '\\';    i++;
-                    path[i] = ' ';          i++;
-                    for (int j = i; j < path.length(); j++) {
-                        path[j] = path[j + 1];
-                    }
-                }
-                else {
-                    break;
+    if (found != std::string::npos) {
+        int i = found;
+        while (i != path.length()) {
+            size_t found = path.find("%20");
+            if (found != std::string::npos) {
+                i = found;
+                path[i] = '\\';    i++;
+                path[i] = ' ';          i++;
+                for (int j = i; j < path.length(); j++) {
+                    path[j] = path[j + 1];
                 }
             }
+            else {
+                break;
+            }
         }
-   qDebug() << path;
+    }
+    qDebug() << path;
 #elif _WIN32
     //Fix for WIN
 

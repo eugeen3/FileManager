@@ -16,6 +16,7 @@
 #include <cstring>
 #include <algorithm>
 #include <QPushButton>
+#include <QTextCodec>
 
 namespace Ui {
 class MainWindow;
@@ -39,10 +40,13 @@ public:
     void getValidPath(QString &);
 private:
     Ui::MainWindow *ui;
+    const QString rootPath;
+    const QString rootPathLabel = "Компьютер";
     QFileSystemModel *directories;
     QFileSystemModel *files;
     QTableView *filesTable;
     QListView *filesList;
+    QAbstractItemView *filesCurrentView;
     QPushButton *goBack;
     QPushButton *toTheRoot;
     int viewModel;

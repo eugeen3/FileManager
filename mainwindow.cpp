@@ -1,6 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "createfile.h"
+#include "dialogwindow.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -13,25 +13,26 @@ MainWindow::MainWindow(QWidget *parent) :
 
     initFiles();
     initDirs();
-    initButtons();
     initFilesList();
     initFilesTable();
     initTree();
 
     dirPath = new QCompleter(files);
     ui->goToPath->setCompleter(dirPath);
-
     ui->goToPath->setText(rootPathLabel);
     filesCurrentView = filesTable;
-    ui->rightLayout->addWidget(filesCurrentView, 2, 0, 1, 2);
+    ui->rightLayout->addWidget(filesCurrentView, 2, 0, 1, 3);
+    ui->splitter->setStretchFactor(1, 1);
 
+
+    connect(filesCurrentView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(slotCustomMenuRequested(QPoint)));
     connect(filesCurrentView, &QAbstractItemView::doubleClicked, this, &MainWindow::fileSystemGoForward);
     //connect(filesCurrentView, &QLineEdit::returnPressed, this, &MainWindow::fileSystemGoForward);
-    connect(goBack, &QPushButton::clicked, this, &MainWindow::dirUp);
-    connect(toTheRoot, &QPushButton::clicked, this, &MainWindow::dirRoot);
+    connect(ui->goBack, &QPushButton::clicked, this, &MainWindow::dirUp);
+    connect(ui->toTheRoot, &QPushButton::clicked, this, &MainWindow::dirRoot);
 
-    connect(filesCurrentView, &MainWindow::enterPressed, this, &MainWindow::fileSystemGoForward);
-  //  connect(filesCurrentView, &MainWindow::deletePressed, this, &MainWindow::removeKebab);
+    //connect(filesCurrentView, &MainWindow::enterPressed, this, &MainWindow::fileSystemGoForward);
+    //connect(filesCurrentView, &MainWindow::deletePressed, this, &MainWindow::removeKebab);
 }
 
 MainWindow::~MainWindow()
@@ -54,6 +55,7 @@ void MainWindow::initDirs() {
 void MainWindow::initFilesList() {
     filesList = new QListView();
     filesList->setModel(files);
+    filesList->setContextMenuPolicy(Qt::CustomContextMenu);
 }
 
 void MainWindow::initFilesTable() {
@@ -63,6 +65,7 @@ void MainWindow::initFilesTable() {
     filesTable->setSortingEnabled(true);
     filesTable->setSelectionBehavior(QAbstractItemView::SelectRows);
     filesTable->setSelectionMode(QAbstractItemView::SingleSelection);
+    filesTable->setContextMenuPolicy(Qt::CustomContextMenu);
 }
 
 void MainWindow::initTree() {
@@ -71,17 +74,6 @@ void MainWindow::initTree() {
     ui->treeView->hideColumn(2);
     ui->treeView->hideColumn(3);
     ui->treeView->header()->hide();
-}
-
-void MainWindow::initButtons() {
-    goBack = new QPushButton("Назад");
-    goBack->setMinimumSize(150, 20);
-
-    toTheRoot = new QPushButton("Корневая папка");
-    toTheRoot->setMinimumSize(180, 20);
-
-    ui->rightLayout->addWidget(goBack, 1, 0);
-    ui->rightLayout->addWidget(toTheRoot, 1, 1);
 }
 
 /*
@@ -130,7 +122,7 @@ void MainWindow::on_list_triggered()
         cleanLayout(ui->rightLayout);
         if (filesTable == nullptr) initFilesList();
         filesCurrentView = filesList;
-        ui->rightLayout->addWidget(filesList, 2, 0, 1, 2);
+        ui->rightLayout->addWidget(filesList, 2, 0, 1, 3);
         connect(filesCurrentView, &QAbstractItemView::doubleClicked, this, &MainWindow::fileSystemGoForward);
     }
 }
@@ -142,7 +134,7 @@ void MainWindow::on_table_triggered()
         cleanLayout(ui->rightLayout);
         if (filesTable == nullptr) initFilesTable();
         filesCurrentView = filesTable;
-        ui->rightLayout->addWidget(filesTable, 2, 0, 1, 2);
+        ui->rightLayout->addWidget(filesTable, 2, 0, 1, 3);
         connect(filesCurrentView, &QAbstractItemView::doubleClicked, this, &MainWindow::fileSystemGoForward);
     }
 }
@@ -198,18 +190,21 @@ void MainWindow::on_goToPath_returnPressed()
     }
 }
 
-void MainWindow::on_searchInCurDir_returnPressed()
-{
+void MainWindow::on_searchInCurDir_returnPressed() {
 
 }
 
-void MainWindow::removeKebab(const QModelIndex &index) {
+void MainWindow::removeKebab() {
+
+}
+
+void MainWindow::rename() {
 
 }
 
 void MainWindow::on_CreateFile_triggered()
 {
-    CreateFile dialogWindow;
+    DialogWindow dialogWindow;
     dialogWindow.setModal(true);
     dialogWindow.exec();
     //TODO
@@ -265,4 +260,32 @@ void MainWindow::getValidPath(QString &path) {
 #endif
 }
 
+void MainWindow::slotCustomMenuRequested(QPoint pos)
+{
+    /* Создаем объект контекстного меню */
+    QMenu * contextMenu = new QMenu(this);
 
+    QAction *openFileSystem = new QAction("Открыть");
+    QAction *editFileSystem = new QAction("Переименовать");
+    QAction *copyFileSystem = new QAction("Копировать");
+    QAction *cutFileSystem = new QAction("Вырезать");
+    QAction *deleteFileSystem = new QAction("Удалить");
+    QAction *pasteFileSystem = new QAction("Копировать");
+    QAction *propertiesFileSystem = new QAction("Свойства");
+
+
+    contextMenu->addAction(openFileSystem);
+    contextMenu->addAction(editFileSystem);
+    contextMenu->addAction(copyFileSystem);
+    contextMenu->addAction(cutFileSystem);
+    contextMenu->addAction(deleteFileSystem);
+    contextMenu->addAction(pasteFileSystem);
+    contextMenu->addAction(propertiesFileSystem);
+
+    connect(openFileSystem, SIGNAL(triggered()), this, SLOT((fileSystemGoForward())));
+    connect(editFileSystem, SIGNAL(triggered()), this, SLOT(rename()));
+    connect(deleteFileSystem, SIGNAL(triggered()), this, SLOT(removeKebab()));
+
+    /* Вызываем контекстное меню */
+    contextMenu->popup(filesCurrentView->viewport()->mapToGlobal(pos));
+}

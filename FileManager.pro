@@ -25,16 +25,16 @@ DEFINES += QT_DEPRECATED_WARNINGS
 CONFIG += c++11
 
 SOURCES += \
-        createfile.cpp \
+        dialogwindow.cpp \
         main.cpp \
         mainwindow.cpp
 
 HEADERS += \
-        createfile.h \
+        dialogwindow.h \
         mainwindow.h
 
 FORMS += \
-        createfile.ui \
+        dialogwindow.ui \
         mainwindow.ui
 
 # Default rules for deployment.

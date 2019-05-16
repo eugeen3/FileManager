@@ -19,6 +19,7 @@
 #include <QTextCodec>
 #include <QCompleter>
 #include <QKeyEvent>
+#include <QPoint>
 
 namespace Ui {
 class MainWindow;
@@ -36,11 +37,10 @@ public:
     void initFiles();
     void initDirs();
     void initTree();
-    void initButtons();
     void cleanLayout(QLayout*);
     QWidget* getFilesWidget();
     void getValidPath(QString &);
-    void keyPressEvent(QKeyEvent *);
+    //void keyPressEvent(QKeyEvent *);
 private:
     Ui::MainWindow *ui;
     const QString rootPath;
@@ -50,22 +50,24 @@ private:
     QTableView *filesTable;
     QListView *filesList;
     QAbstractItemView *filesCurrentView;
-    QPushButton *goBack;
-    QPushButton *toTheRoot;
     QCompleter *dirPath;
-    int viewModel;
 
 private slots:
     void on_treeView_clicked(const QModelIndex &);
+
     void fileSystemGoForward(const QModelIndex &);
-    void removeKebab(const QModelIndex &);
+    void removeKebab();
+    void rename();
+
     void on_table_triggered();
     void on_list_triggered();
+
     void on_goToPath_returnPressed();
     void on_searchInCurDir_returnPressed();
     void on_CreateFile_triggered();
     void dirUp();
     void dirRoot();
+    void slotCustomMenuRequested(QPoint);
 signals:
     void enterPressed(const QModelIndex &);
     void deletePressed(const QModelIndex &);

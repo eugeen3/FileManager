@@ -17,13 +17,21 @@ MainWindow::MainWindow(QWidget *parent) :
     initFilesList();
     initFilesTable();
     initTree();
+
+    dirPath = new QCompleter(files);
+    ui->goToPath->setCompleter(dirPath);
+
     ui->goToPath->setText(rootPathLabel);
     filesCurrentView = filesTable;
     ui->rightLayout->addWidget(filesCurrentView, 2, 0, 1, 2);
 
-    connect(filesCurrentView, &QAbstractItemView::doubleClicked, this, &MainWindow::fileSystemDoubleClicked);
+    connect(filesCurrentView, &QAbstractItemView::doubleClicked, this, &MainWindow::fileSystemGoForward);
+    //connect(filesCurrentView, &QLineEdit::returnPressed, this, &MainWindow::fileSystemGoForward);
     connect(goBack, &QPushButton::clicked, this, &MainWindow::dirUp);
     connect(toTheRoot, &QPushButton::clicked, this, &MainWindow::dirRoot);
+
+    connect(filesCurrentView, &MainWindow::enterPressed, this, &MainWindow::fileSystemGoForward);
+  //  connect(filesCurrentView, &MainWindow::deletePressed, this, &MainWindow::removeKebab);
 }
 
 MainWindow::~MainWindow()
@@ -76,6 +84,17 @@ void MainWindow::initButtons() {
     ui->rightLayout->addWidget(toTheRoot, 1, 1);
 }
 
+/*
+void MainWindow::keyPressEvent(QKeyEvent *keyEvent) {
+    if (index.isValid()) {
+        switch (keyEvent->key()) {
+            case Qt::Key_Enter : emit enterPressed(index);
+            case Qt::Key_Delete : emit deletePressed(index);
+        }
+    }
+}
+*/
+
 void MainWindow::on_treeView_clicked(const QModelIndex &index)
 {
     QString path = directories->fileInfo(index).absoluteFilePath();
@@ -83,42 +102,48 @@ void MainWindow::on_treeView_clicked(const QModelIndex &index)
     ui->goToPath->setText(path);
 }
 
-void MainWindow::fileSystemDoubleClicked(const QModelIndex &index)
+void MainWindow::fileSystemGoForward(const QModelIndex &index)
 {
-    QString path = files->fileInfo(index).absoluteFilePath();
+    QString sPath = files->fileInfo(index).absoluteFilePath();
+    QTextCodec *codec_1251 = QTextCodec::codecForName("Windows-1251");
+    QByteArray baPath = sPath.toUtf8();
+    QString string = codec_1251->toUnicode(baPath);
+    qDebug() << "BAPATH" << baPath;
+
     if(files->fileInfo(index).isDir()) {
-        qDebug() << "STR" << path;
-        filesCurrentView->setRootIndex(files->setRootPath(path));
-        ui->goToPath->setText(path);
+        qDebug() << "STR" << sPath;
+        filesCurrentView->setRootIndex(files->setRootPath(sPath));
+        ui->goToPath->setText(sPath);
     }
     else if (files->fileInfo(index).isFile()) {
-        getValidPath(path);
+        getValidPath(sPath);
         //Fix spaces and cyrillic symbols in path
-        QDesktopServices::openUrl(path);
+        qDebug() << "Open File" <<sPath;
+        QDesktopServices::openUrl(sPath);
     }
 }
 
 void MainWindow::on_list_triggered()
 {
     if (filesCurrentView != filesList) {
-        disconnect(filesCurrentView, &QAbstractItemView::doubleClicked, this, &MainWindow::fileSystemDoubleClicked);
+        disconnect(filesCurrentView, &QAbstractItemView::doubleClicked, this, &MainWindow::fileSystemGoForward);
         cleanLayout(ui->rightLayout);
         if (filesTable == nullptr) initFilesList();
         filesCurrentView = filesList;
         ui->rightLayout->addWidget(filesList, 2, 0, 1, 2);
-        connect(filesCurrentView, &QAbstractItemView::doubleClicked, this, &MainWindow::fileSystemDoubleClicked);
+        connect(filesCurrentView, &QAbstractItemView::doubleClicked, this, &MainWindow::fileSystemGoForward);
     }
 }
 
 void MainWindow::on_table_triggered()
 {
     if (filesCurrentView != filesTable) {
-        disconnect(filesCurrentView, &QAbstractItemView::doubleClicked, this, &MainWindow::fileSystemDoubleClicked);
+        disconnect(filesCurrentView, &QAbstractItemView::doubleClicked, this, &MainWindow::fileSystemGoForward);
         cleanLayout(ui->rightLayout);
         if (filesTable == nullptr) initFilesTable();
         filesCurrentView = filesTable;
         ui->rightLayout->addWidget(filesTable, 2, 0, 1, 2);
-        connect(filesCurrentView, &QAbstractItemView::doubleClicked, this, &MainWindow::fileSystemDoubleClicked);
+        connect(filesCurrentView, &QAbstractItemView::doubleClicked, this, &MainWindow::fileSystemGoForward);
     }
 }
 
@@ -166,7 +191,8 @@ void MainWindow::on_goToPath_returnPressed()
             getValidPath(sPath);
         }
         */
-        QDesktopServices::openUrl(QUrl(baPath, QUrl::TolerantMode));
+        qDebug() << "Open File" <<sPath;
+        QDesktopServices::openUrl(sPath);
     } else {
         QMessageBox::critical(this, "FileManager", "Не удалось перейти по указаному пути");
     }
@@ -174,6 +200,10 @@ void MainWindow::on_goToPath_returnPressed()
 
 void MainWindow::on_searchInCurDir_returnPressed()
 {
+
+}
+
+void MainWindow::removeKebab(const QModelIndex &index) {
 
 }
 

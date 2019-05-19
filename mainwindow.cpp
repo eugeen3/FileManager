@@ -200,11 +200,23 @@ void MainWindow::removeKebab() {
 
 void MainWindow::rename() {
 
+        int row = filesCurrentView->selectionModel()->currentIndex().row();
+        /*
+        if(row >= 0){
+            if () {
+
+            {
+                 return;
+            } else {
+
+            }
+        }
+*/
 }
 
 void MainWindow::on_CreateFile_triggered()
 {
-    DialogWindow dialogWindow;
+    DialogWindow dialogWindow(this, "Введите имя файла или папки", true);
     dialogWindow.setModal(true);
     dialogWindow.exec();
     //TODO

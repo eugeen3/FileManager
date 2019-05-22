@@ -40,6 +40,8 @@ public:
     void cleanLayout(QLayout*);
     QWidget* getFilesWidget();
     void getValidPath(QString &);
+    void resetModelIndex(QModelIndex &);
+    QModelIndex getCurrentModelIndex();
     //void keyPressEvent(QKeyEvent *);
 private:
     Ui::MainWindow *ui;
@@ -55,7 +57,8 @@ private:
 private slots:
     void on_treeView_clicked(const QModelIndex &);
 
-    void fileSystemGoForward(const QModelIndex &);
+   // void fileSystemGoForward(const QModelIndex &);
+    void fileSystemGoForward();
     void removeKebab();
     void rename();
 

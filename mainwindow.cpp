@@ -76,6 +76,10 @@ void MainWindow::initTree() {
     ui->treeView->header()->hide();
 }
 
+void MainWindow::resetModelIndex(QModelIndex &index) {
+    //index = -1;
+}
+
 /*
 void MainWindow::keyPressEvent(QKeyEvent *keyEvent) {
     if (index.isValid()) {
@@ -93,9 +97,32 @@ void MainWindow::on_treeView_clicked(const QModelIndex &index)
     filesCurrentView->setRootIndex(files->setRootPath(path));
     ui->goToPath->setText(path);
 }
-
+/*
 void MainWindow::fileSystemGoForward(const QModelIndex &index)
 {
+    QString sPath = files->fileInfo(index).absoluteFilePath();
+    QTextCodec *codec_1251 = QTextCodec::codecForName("Windows-1251");
+    QByteArray baPath = sPath.toUtf8();
+    QString string = codec_1251->toUnicode(baPath);
+    qDebug() << "BAPATH" << baPath;
+
+    if(files->fileInfo(index).isDir()) {
+        qDebug() << "STR" << sPath;
+        filesCurrentView->setRootIndex(files->setRootPath(sPath));
+        ui->goToPath->setText(sPath);
+    }
+    else if (files->fileInfo(index).isFile()) {
+        getValidPath(sPath);
+        //Fix spaces and cyrillic symbols in path
+        qDebug() << "Open File" <<sPath;
+        QDesktopServices::openUrl(sPath);
+    }
+}
+*/
+
+void MainWindow::fileSystemGoForward()
+{
+    const QModelIndex index = getCurrentModelIndex();
     QString sPath = files->fileInfo(index).absoluteFilePath();
     QTextCodec *codec_1251 = QTextCodec::codecForName("Windows-1251");
     QByteArray baPath = sPath.toUtf8();
@@ -200,7 +227,10 @@ void MainWindow::removeKebab() {
 
 void MainWindow::rename() {
 
-        int row = filesCurrentView->selectionModel()->currentIndex().row();
+        QModelIndex index = getCurrentModelIndex();
+        if (index.isValid()) {
+    //TODO
+        }
         /*
         if(row >= 0){
             if () {
@@ -278,26 +308,38 @@ void MainWindow::slotCustomMenuRequested(QPoint pos)
     QMenu * contextMenu = new QMenu(this);
 
     QAction *openFileSystem = new QAction("Открыть");
-    QAction *editFileSystem = new QAction("Переименовать");
+    QAction *renameFileSystem = new QAction("Переименовать");
     QAction *copyFileSystem = new QAction("Копировать");
     QAction *cutFileSystem = new QAction("Вырезать");
     QAction *deleteFileSystem = new QAction("Удалить");
-    QAction *pasteFileSystem = new QAction("Копировать");
+    QAction *pasteFileSystem = new QAction("Вставить");
     QAction *propertiesFileSystem = new QAction("Свойства");
 
 
     contextMenu->addAction(openFileSystem);
-    contextMenu->addAction(editFileSystem);
+    contextMenu->addSeparator();
+
     contextMenu->addAction(copyFileSystem);
     contextMenu->addAction(cutFileSystem);
-    contextMenu->addAction(deleteFileSystem);
     contextMenu->addAction(pasteFileSystem);
+    contextMenu->addSeparator();
+
+    contextMenu->addAction(renameFileSystem);
+    contextMenu->addAction(deleteFileSystem);
+    contextMenu->addSeparator();
+
     contextMenu->addAction(propertiesFileSystem);
 
-    connect(openFileSystem, SIGNAL(triggered()), this, SLOT((fileSystemGoForward())));
-    connect(editFileSystem, SIGNAL(triggered()), this, SLOT(rename()));
+    connect(openFileSystem, &QAction::triggered, this, &MainWindow::fileSystemGoForward);
+    connect(renameFileSystem, &QAction::triggered, this, &MainWindow::rename);
     connect(deleteFileSystem, SIGNAL(triggered()), this, SLOT(removeKebab()));
 
     /* Вызываем контекстное меню */
     contextMenu->popup(filesCurrentView->viewport()->mapToGlobal(pos));
+}
+
+QModelIndex MainWindow::getCurrentModelIndex() {
+    if(filesCurrentView != nullptr) {
+        return filesCurrentView->currentIndex();
+    }
 }

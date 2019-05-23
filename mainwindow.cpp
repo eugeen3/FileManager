@@ -119,8 +119,24 @@ void MainWindow::fileSystemGoForward()
     else if (files->fileInfo(index).isFile()) {
         getValidPath(sPath);
         //Fix spaces and cyrillic symbols in path
+
+        QString program;
+        QString initCmd;
+#ifdef __linux__
+
+#elif _WIN32
+        program = "C:\\Windows\\System32\\cmd.exe";
+        initCmd = "cmd /C";
+        sPath.replace("/", "\\");
+#endif
+        initCmd += sPath;
+        process = new QProcess();
+        QStringList args;
+        args.append(initCmd);
         qDebug() << "Open File" <<sPath;
-        QDesktopServices::openUrl(sPath);
+        process->setProgram(program);
+        process->setArguments(args);
+        process->startDetached();
     }
 }
 
@@ -183,17 +199,17 @@ void MainWindow::on_goToPath_returnPressed()
     } else if (fPath.exists() && fPath.isFile()) {
         //Fix spaces and cyrillic symbols in path
 
-        /*
-        QUrl uPath;
-        uPath.QUrl::setUrl(sPath);
-        qDebug() << uPath;
-        if (!QUrl(sPath).isValid()) {
-            qDebug() << "Invalid";
-            getValidPath(sPath);
-        }
-        */
-        qDebug() << "Open File" <<sPath;
-        QDesktopServices::openUrl(sPath);
+                /*
+                QUrl uPath;
+                uPath.QUrl::setUrl(sPath);
+                qDebug() << uPath;
+                if (!QUrl(sPath).isValid()) {
+                    qDebug() << "Invalid";
+                    getValidPath(sPath);
+                }
+                */
+                qDebug() << "Open File in LineEdit" <<sPath;
+                QDesktopServices::openUrl(sPath);
     } else {
         QMessageBox::critical(this, "FileManager", "Не удалось перейти по указаному пути");
     }
@@ -341,6 +357,7 @@ void MainWindow::slotCustomMenuRequested(QPoint pos)
     connect(openFileSystem, &QAction::triggered, this, &MainWindow::fileSystemGoForward);
     connect(renameFileSystem, &QAction::triggered, this, &MainWindow::rename);
     connect(deleteFileSystem, &QAction::triggered, this, &MainWindow::removeKebab);
+
 
     /* Вызываем контекстное меню */
     contextMenu->popup(filesCurrentView->viewport()->mapToGlobal(pos));

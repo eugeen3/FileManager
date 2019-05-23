@@ -1,6 +1,12 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#ifdef __linux__
+
+#elif _WIN32
+#include <Windows.h>
+#endif
+
 #include <QMainWindow>
 #include <QHBoxLayout>
 #include <QTreeView>
@@ -21,6 +27,7 @@
 #include <QKeyEvent>
 #include <QPoint>
 #include <QProgressBar>
+#include <QProcess>
 
 namespace Ui {
 class MainWindow;
@@ -47,6 +54,7 @@ public:
     //void keyPressEvent(QKeyEvent *);
 private:
     Ui::MainWindow *ui;
+    QProcess *process;
     const QString rootPath;
     const QString rootPathLabel = "Компьютер";
     QFileSystemModel *directories;

@@ -20,6 +20,7 @@
 #include <QCompleter>
 #include <QKeyEvent>
 #include <QPoint>
+#include <QProgressBar>
 
 namespace Ui {
 class MainWindow;
@@ -42,6 +43,7 @@ public:
     void getValidPath(QString &);
     void resetModelIndex(QModelIndex &);
     QModelIndex getCurrentModelIndex();
+    QString getPathByCurrentModelIndex();
     //void keyPressEvent(QKeyEvent *);
 private:
     Ui::MainWindow *ui;

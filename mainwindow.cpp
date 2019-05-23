@@ -24,6 +24,10 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->rightLayout->addWidget(filesCurrentView, 2, 0, 1, 3);
     ui->splitter->setStretchFactor(1, 1);
 
+    QLineEdit *lb = new QLineEdit("TEXT");
+    QProgressBar *prBar = new QProgressBar(this);
+    ui->statusBar->addWidget(lb);
+    ui->statusBar->addWidget(prBar);
 
     connect(filesCurrentView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(slotCustomMenuRequested(QPoint)));
     connect(filesCurrentView, &QAbstractItemView::doubleClicked, this, &MainWindow::fileSystemGoForward);
@@ -97,28 +101,6 @@ void MainWindow::on_treeView_clicked(const QModelIndex &index)
     filesCurrentView->setRootIndex(files->setRootPath(path));
     ui->goToPath->setText(path);
 }
-/*
-void MainWindow::fileSystemGoForward(const QModelIndex &index)
-{
-    QString sPath = files->fileInfo(index).absoluteFilePath();
-    QTextCodec *codec_1251 = QTextCodec::codecForName("Windows-1251");
-    QByteArray baPath = sPath.toUtf8();
-    QString string = codec_1251->toUnicode(baPath);
-    qDebug() << "BAPATH" << baPath;
-
-    if(files->fileInfo(index).isDir()) {
-        qDebug() << "STR" << sPath;
-        filesCurrentView->setRootIndex(files->setRootPath(sPath));
-        ui->goToPath->setText(sPath);
-    }
-    else if (files->fileInfo(index).isFile()) {
-        getValidPath(sPath);
-        //Fix spaces and cyrillic symbols in path
-        qDebug() << "Open File" <<sPath;
-        QDesktopServices::openUrl(sPath);
-    }
-}
-*/
 
 void MainWindow::fileSystemGoForward()
 {
@@ -222,27 +204,53 @@ void MainWindow::on_searchInCurDir_returnPressed() {
 }
 
 void MainWindow::removeKebab() {
+    QString sPath = getPathByCurrentModelIndex();
+    QFileInfo fPath = sPath;
 
+    if(fPath.isDir()) {
+        QDir dir(sPath);
+        if(!dir.removeRecursively()) {
+            QMessageBox::critical(this, "Delete", "Не удалось удалить указанную папку");
+        }
+    } else if(fPath.isFile()) {
+        QFile file;
+        if(!file.remove(sPath)) {
+            QMessageBox::critical(this, "Delete", "Не удалось удалить указанный файл");
+        }
+    } else {
+        QMessageBox::critical(this, "FileManager", "Не удалось перейти по указаному пути");
+    }
 }
 
 void MainWindow::rename() {
 
-        QModelIndex index = getCurrentModelIndex();
-        if (index.isValid()) {
-    //TODO
-        }
-        /*
-        if(row >= 0){
-            if () {
+    QString sPath = getPathByCurrentModelIndex();
+    qDebug() << "ABS PATH" << sPath;
+    QFileInfo fPath = sPath;
+    QString newName, oldName = sPath;
 
-            {
-                 return;
-            } else {
+    if (fPath.isDir()) {
+        QDir directory;
+        QString rawFileName = "name312312311224512";
 
-            }
+        newName = sPath.section("/", 0, -2) + "/" + rawFileName;
+        if(!directory.rename(oldName, newName)) {
+            QMessageBox::critical(this, "Rename", "Rename error");
         }
-*/
+    }
+    else if (fPath.isFile()) {
+        QFile file;
+        QString rawFileName = "name312312312.txt";
+
+        newName = sPath.section("/", 0, -2) + "/" + rawFileName;
+        if(!file.rename(oldName, newName)) {
+            QMessageBox::critical(this, "Rename", "Rename error");
+        }
+    } else {
+        QMessageBox::critical(this, "FileManager", "Не удалось перейти по указаному пути");
+    }
 }
+
 
 void MainWindow::on_CreateFile_triggered()
 {
@@ -332,7 +340,7 @@ void MainWindow::slotCustomMenuRequested(QPoint pos)
 
     connect(openFileSystem, &QAction::triggered, this, &MainWindow::fileSystemGoForward);
     connect(renameFileSystem, &QAction::triggered, this, &MainWindow::rename);
-    connect(deleteFileSystem, SIGNAL(triggered()), this, SLOT(removeKebab()));
+    connect(deleteFileSystem, &QAction::triggered, this, &MainWindow::removeKebab);
 
     /* Вызываем контекстное меню */
     contextMenu->popup(filesCurrentView->viewport()->mapToGlobal(pos));
@@ -342,4 +350,9 @@ QModelIndex MainWindow::getCurrentModelIndex() {
     if(filesCurrentView != nullptr) {
         return filesCurrentView->currentIndex();
     }
+}
+
+QString MainWindow::getPathByCurrentModelIndex() {
+    QString path = files->filePath(getCurrentModelIndex());
+    return path;
 }

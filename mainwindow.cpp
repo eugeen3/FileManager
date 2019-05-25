@@ -199,7 +199,7 @@ void MainWindow::on_goToPath_returnPressed()
     } else if (fPath.exists() && fPath.isFile()) {
         //Fix spaces and cyrillic symbols in path
 
-                /*
+        /*
                 QUrl uPath;
                 uPath.QUrl::setUrl(sPath);
                 qDebug() << uPath;
@@ -208,8 +208,8 @@ void MainWindow::on_goToPath_returnPressed()
                     getValidPath(sPath);
                 }
                 */
-                qDebug() << "Open File in LineEdit" <<sPath;
-                QDesktopServices::openUrl(sPath);
+        qDebug() << "Open File in LineEdit" <<sPath;
+        QDesktopServices::openUrl(sPath);
     } else {
         QMessageBox::critical(this, "FileManager", "Не удалось перейти по указаному пути");
     }
@@ -245,14 +245,21 @@ void MainWindow::rename() {
     QFileInfo fPath = sPath;
     QString newName, oldName = sPath;
 
+    DialogWindow dialogWindow(this, "Введите имя файла", true);
+    dialogWindow.setModal(true);
+    dialogWindow.exec();
+
     if (fPath.isDir()) {
         QDir directory;
-        QString rawFileName = "name312312311224512";
-
+        QString rawFileName = dialogWindow.getLineEditText();
         newName = sPath.section("/", 0, -2) + "/" + rawFileName;
-        if(!directory.rename(oldName, newName)) {
-            QMessageBox::critical(this, "Rename", "Rename error");
+/*
+        while(!directory.rename(oldName, newName)) {
+            dialogWindow.setText("Ошибка переименования");
+
         }
+*/
+
     }
     else if (fPath.isFile()) {
         QFile file;
@@ -372,4 +379,8 @@ QModelIndex MainWindow::getCurrentModelIndex() {
 QString MainWindow::getPathByCurrentModelIndex() {
     QString path = files->filePath(getCurrentModelIndex());
     return path;
+}
+
+bool MainWindow::checkNewName() {
+    if ()
 }

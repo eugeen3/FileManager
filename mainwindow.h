@@ -7,6 +7,7 @@
 #include <Windows.h>
 #endif
 
+#include <dialogwindow.h>
 #include <QMainWindow>
 #include <QHBoxLayout>
 #include <QTreeView>
@@ -51,6 +52,7 @@ public:
     void resetModelIndex(QModelIndex &);
     QModelIndex getCurrentModelIndex();
     QString getPathByCurrentModelIndex();
+    bool checkNewName(QString, QString, QObject, DialogWindow);
     //void keyPressEvent(QKeyEvent *);
 private:
     Ui::MainWindow *ui;

@@ -15,6 +15,8 @@ class DialogWindow : public QDialog
 public:
     explicit DialogWindow(QWidget *parent = nullptr, QString msg = nullptr, bool addLineEdit = false);
     ~DialogWindow();
+    QString getLineEditText();
+    void setText(QString);
 
 private:
     Ui::DialogWindow *ui;

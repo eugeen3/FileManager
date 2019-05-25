@@ -19,3 +19,14 @@ DialogWindow::~DialogWindow()
 {
     delete ui;
 }
+
+QString DialogWindow::getLineEditText() {
+    if (name != nullptr) {
+        return name->text();
+    }
+}
+
+void DialogWindow::setText(QString text) {
+    ui->message->setText(text);
+}
+

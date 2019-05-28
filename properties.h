@@ -19,7 +19,7 @@ public:
     ~Properties();
     qint64 dirSize(QString dirPath);
     QString formatSize(qint64 size);
-    QString dirContains(QString dirPath)
+    QString dirContains(QString dirPath);
 
 private:
     Ui::Properties *ui;

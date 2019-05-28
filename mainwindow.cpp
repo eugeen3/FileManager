@@ -253,13 +253,11 @@ void MainWindow::rename() {
         QDir directory;
         QString rawFileName = dialogWindow.getLineEditText();
         newName = sPath.section("/", 0, -2) + "/" + rawFileName;
-/*
+
         while(!directory.rename(oldName, newName)) {
             dialogWindow.setText("Ошибка переименования");
 
         }
-*/
-
     }
     else if (fPath.isFile()) {
         QFile file;
@@ -274,6 +272,11 @@ void MainWindow::rename() {
     }
 }
 
+void MainWindow::showProperties() {
+    QFileInfo *fInfo = new QFileInfo(getPathByCurrentModelIndex());
+    Properties *propWin = new Properties(this, fInfo);
+    propWin->exec();
+}
 
 void MainWindow::on_CreateFile_triggered()
 {
@@ -364,7 +367,7 @@ void MainWindow::slotCustomMenuRequested(QPoint pos)
     connect(openFileSystem, &QAction::triggered, this, &MainWindow::fileSystemGoForward);
     connect(renameFileSystem, &QAction::triggered, this, &MainWindow::rename);
     connect(deleteFileSystem, &QAction::triggered, this, &MainWindow::removeKebab);
-
+    connect(propertiesFileSystem, &QAction::triggered, this, &MainWindow::showProperties);
 
     /* Вызываем контекстное меню */
     contextMenu->popup(filesCurrentView->viewport()->mapToGlobal(pos));
@@ -380,7 +383,8 @@ QString MainWindow::getPathByCurrentModelIndex() {
     QString path = files->filePath(getCurrentModelIndex());
     return path;
 }
-
+/*
 bool MainWindow::checkNewName() {
     if ()
 }
+*/

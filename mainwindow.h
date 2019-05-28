@@ -8,6 +8,7 @@
 #endif
 
 #include <dialogwindow.h>
+#include <properties.h>
 #include <QMainWindow>
 #include <QHBoxLayout>
 #include <QTreeView>
@@ -73,6 +74,7 @@ private slots:
     void fileSystemGoForward();
     void removeKebab();
     void rename();
+    void showProperties();
 
     void on_table_triggered();
     void on_list_triggered();

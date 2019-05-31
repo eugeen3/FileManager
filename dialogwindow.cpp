@@ -30,3 +30,8 @@ void DialogWindow::setText(QString text) {
     ui->message->setText(text);
 }
 
+
+void DialogWindow::on_cancelButton_clicked()
+{
+    this->close();
+}

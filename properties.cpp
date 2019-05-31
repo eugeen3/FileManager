@@ -14,12 +14,12 @@ Properties::Properties(QWidget *parent, QFileInfo *fileSystemObject) :
             + QString::number(fileSystemObject->size()) + " байт)");
 
         QLabel *createdLabel, *modifiedLabel, *readLabel;
-        QLabel *createdInfo, *modifiedInfo, *readInfo;
+       // QLabel *createdInfo, *modifiedInfo, *readInfo;
         createdLabel = new QLabel("Создан");
         modifiedLabel = new QLabel("Изменён");
         readLabel = new QLabel("Открыт");
-        QDateTime createdTime = fileSystemObject->fileTime();
-        createdInfo = new QLabel(.toString());
+        //QDateTime createdTime = fileSystemObject->fileTime();
+       // createdInfo = new QLabel(.toString());
     } else if (fileSystemObject->isDir()) {
         ui->typeLabel->setText("Тип:");
         ui->typeInfo->setText("Папка с файлами");

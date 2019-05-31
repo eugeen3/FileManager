@@ -186,21 +186,22 @@
      <height>20</height>
     </rect>
    </property>
-   <widget class="QMenu" name="menu">
+   <widget class="QMenu" name="createNew">
     <property name="title">
      <string>Файл</string>
     </property>
     <addaction name="CreateFile"/>
    </widget>
-   <widget class="QMenu" name="menu_2">
+   <widget class="QMenu" name="viewModel">
     <property name="title">
      <string>Вид</string>
     </property>
     <addaction name="list"/>
     <addaction name="table"/>
+    <addaction name="icons"/>
    </widget>
-   <addaction name="menu"/>
-   <addaction name="menu_2"/>
+   <addaction name="createNew"/>
+   <addaction name="viewModel"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <attribute name="toolBarArea">
@@ -224,6 +225,11 @@
   <action name="table">
    <property name="text">
     <string>Таблица</string>
+   </property>
+  </action>
+  <action name="icons">
+   <property name="text">
+    <string>Иконки</string>
    </property>
   </action>
  </widget>

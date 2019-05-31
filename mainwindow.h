@@ -42,8 +42,9 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
-    void initFilesList();
-    void initFilesTable();
+    void listView();
+    void iconView();
+    void tableView();
     void initFiles();
     void initDirs();
     void initTree();
@@ -85,6 +86,8 @@ private slots:
     void dirUp();
     void dirRoot();
     void slotCustomMenuRequested(QPoint);
+    void on_icons_triggered();
+
 signals:
     void enterPressed(const QModelIndex &);
     void deletePressed(const QModelIndex &);

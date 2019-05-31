@@ -18,6 +18,9 @@ public:
     QString getLineEditText();
     void setText(QString);
 
+private slots:
+    void on_cancelButton_clicked();
+
 private:
     Ui::DialogWindow *ui;
     QLineEdit *name;

@@ -13,14 +13,14 @@ MainWindow::MainWindow(QWidget *parent) :
 
     initFiles();
     initDirs();
-    initFilesList();
-    initFilesTable();
+    listView();
+    tableView();
     initTree();
 
     dirPath = new QCompleter(files);
     ui->goToPath->setCompleter(dirPath);
     ui->goToPath->setText(rootPathLabel);
-    filesCurrentView = filesTable;
+    filesCurrentView = filesList;
     ui->rightLayout->addWidget(filesCurrentView, 2, 0, 1, 3);
     ui->splitter->setStretchFactor(1, 1);
 
@@ -56,13 +56,14 @@ void MainWindow::initDirs() {
     directories->setRootPath(rootPath);
 }
 
-void MainWindow::initFilesList() {
+void MainWindow::listView() {
     filesList = new QListView();
     filesList->setModel(files);
+    filesList->setViewMode(QListView::ListMode);
     filesList->setContextMenuPolicy(Qt::CustomContextMenu);
 }
 
-void MainWindow::initFilesTable() {
+void MainWindow::tableView() {
     filesTable = new QTableView();
     filesTable->setModel(files);
     filesTable->verticalHeader()->hide();
@@ -145,7 +146,8 @@ void MainWindow::on_list_triggered()
     if (filesCurrentView != filesList) {
         disconnect(filesCurrentView, &QAbstractItemView::doubleClicked, this, &MainWindow::fileSystemGoForward);
         cleanLayout(ui->rightLayout);
-        if (filesTable == nullptr) initFilesList();
+        if (filesTable == nullptr) listView();
+        filesList->setViewMode(QListView::ListMode);
         filesCurrentView = filesList;
         ui->rightLayout->addWidget(filesList, 2, 0, 1, 3);
         connect(filesCurrentView, &QAbstractItemView::doubleClicked, this, &MainWindow::fileSystemGoForward);
@@ -157,9 +159,26 @@ void MainWindow::on_table_triggered()
     if (filesCurrentView != filesTable) {
         disconnect(filesCurrentView, &QAbstractItemView::doubleClicked, this, &MainWindow::fileSystemGoForward);
         cleanLayout(ui->rightLayout);
-        if (filesTable == nullptr) initFilesTable();
+        if (filesTable == nullptr) tableView();
         filesCurrentView = filesTable;
         ui->rightLayout->addWidget(filesTable, 2, 0, 1, 3);
+        connect(filesCurrentView, &QAbstractItemView::doubleClicked, this, &MainWindow::fileSystemGoForward);
+    }
+}
+
+
+void MainWindow::on_icons_triggered()
+{
+    if (filesCurrentView == filesList) {
+        filesList->setViewMode(QListView::IconMode);
+    }
+    else {
+        disconnect(filesCurrentView, &QAbstractItemView::doubleClicked, this, &MainWindow::fileSystemGoForward);
+        cleanLayout(ui->rightLayout);
+        if (filesTable == nullptr) listView();
+        filesList->setViewMode(QListView::IconMode);
+        filesCurrentView = filesList;
+        ui->rightLayout->addWidget(filesList, 2, 0, 1, 3);
         connect(filesCurrentView, &QAbstractItemView::doubleClicked, this, &MainWindow::fileSystemGoForward);
     }
 }
@@ -274,8 +293,8 @@ void MainWindow::rename() {
 
 void MainWindow::showProperties() {
     QFileInfo *fInfo = new QFileInfo(getPathByCurrentModelIndex());
-    Properties *propWin = new Properties(this, fInfo);
-    propWin->exec();
+    Properties propWin(this, fInfo);
+    propWin.exec();
 }
 
 void MainWindow::on_CreateFile_triggered()
@@ -380,8 +399,7 @@ QModelIndex MainWindow::getCurrentModelIndex() {
 }
 
 QString MainWindow::getPathByCurrentModelIndex() {
-    QString path = files->filePath(getCurrentModelIndex());
-    return path;
+    return files->filePath(getCurrentModelIndex());
 }
 /*
 bool MainWindow::checkNewName() {

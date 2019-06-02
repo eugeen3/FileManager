@@ -30,6 +30,7 @@
 #include <QPoint>
 #include <QProgressBar>
 #include <QProcess>
+#include <QThread>
 
 namespace Ui {
 class MainWindow;
@@ -43,7 +44,6 @@ public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
     void listView();
-    void iconView();
     void tableView();
     void initFiles();
     void initDirs();
@@ -55,6 +55,9 @@ public:
     QModelIndex getCurrentModelIndex();
     QString getPathByCurrentModelIndex();
     bool checkNewName(QString, QString, QObject, DialogWindow);
+    bool copyFile(const QString &, const QString &);
+    void enableMultSelection();
+    void disableMultSelection();
     //void keyPressEvent(QKeyEvent *);
 private:
     Ui::MainWindow *ui;
@@ -65,16 +68,21 @@ private:
     QFileSystemModel *files;
     QTableView *filesTable;
     QListView *filesList;
+    //QListView *filesIcon;
     QAbstractItemView *filesCurrentView;
     QCompleter *dirPath;
+    bool multipleSelection;
+    QItemSelectionModel *selectionModel;
 
 private slots:
     void on_treeView_clicked(const QModelIndex &);
-
-   // void fileSystemGoForward(const QModelIndex &);
     void fileSystemGoForward();
-    void removeKebab();
+
+    void copy();
+    //void cut();
+    //void paste();
     void rename();
+    void removeKebab();
     void showProperties();
 
     void on_table_triggered();
@@ -87,6 +95,8 @@ private slots:
     void dirRoot();
     void slotCustomMenuRequested(QPoint);
     void on_icons_triggered();
+
+    void on_multSelection_stateChanged();
 
 signals:
     void enterPressed(const QModelIndex &);

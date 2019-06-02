@@ -15,7 +15,7 @@ class Properties : public QDialog
     Q_OBJECT
 
 public:
-    explicit Properties(QWidget *parent = nullptr, QFileInfo *fileSystemObject = nullptr);
+    explicit Properties(QFileInfo *fileSystemObject = nullptr);
     ~Properties();
     qint64 dirSize(QString dirPath);
     QString formatSize(qint64 size);

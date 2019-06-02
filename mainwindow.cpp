@@ -14,7 +14,7 @@ MainWindow::MainWindow(QWidget *parent) :
     initFiles();
     initDirs();
     listView();
-    tableView();
+   // tableView();
     initTree();
 
     dirPath = new QCompleter(files);
@@ -48,6 +48,7 @@ void MainWindow::initFiles() {
     files = new QFileSystemModel(this);
     files->setFilter(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot);
     files->setRootPath(rootPath);
+    multipleSelection = false;
 }
 
 void MainWindow::initDirs() {
@@ -59,6 +60,7 @@ void MainWindow::initDirs() {
 void MainWindow::listView() {
     filesList = new QListView();
     filesList->setModel(files);
+    if (!multipleSelection) filesList->setSelectionMode(QAbstractItemView::SingleSelection);
     filesList->setViewMode(QListView::ListMode);
     filesList->setContextMenuPolicy(Qt::CustomContextMenu);
 }
@@ -69,9 +71,10 @@ void MainWindow::tableView() {
     filesTable->verticalHeader()->hide();
     filesTable->setSortingEnabled(true);
     filesTable->setSelectionBehavior(QAbstractItemView::SelectRows);
-    filesTable->setSelectionMode(QAbstractItemView::SingleSelection);
+    if (multipleSelection) filesTable->setSelectionMode(QAbstractItemView::SingleSelection);
     filesTable->setContextMenuPolicy(Qt::CustomContextMenu);
 }
+
 
 void MainWindow::initTree() {
     ui->treeView->setModel(directories);
@@ -79,6 +82,7 @@ void MainWindow::initTree() {
     ui->treeView->hideColumn(2);
     ui->treeView->hideColumn(3);
     ui->treeView->header()->hide();
+    ui->treeView->setContextMenuPolicy(Qt::CustomContextMenu);
 }
 
 void MainWindow::resetModelIndex(QModelIndex &index) {
@@ -121,6 +125,11 @@ void MainWindow::fileSystemGoForward()
         getValidPath(sPath);
         //Fix spaces and cyrillic symbols in path
 
+        if (sPath.contains(" ")) {
+            QString temp = '"' + sPath;
+            sPath = temp += '"';
+            qDebug() << "SPath " << sPath;
+        }
         QString program;
         QString initCmd;
 #ifdef __linux__
@@ -145,42 +154,38 @@ void MainWindow::on_list_triggered()
 {
     if (filesCurrentView != filesList) {
         disconnect(filesCurrentView, &QAbstractItemView::doubleClicked, this, &MainWindow::fileSystemGoForward);
-        cleanLayout(ui->rightLayout);
-        if (filesTable == nullptr) listView();
-        filesList->setViewMode(QListView::ListMode);
+        // cleanLayout(ui->rightLayout);
+
+        if (filesList == nullptr) listView();
+        ui->rightLayout->replaceWidget(filesCurrentView, filesList);
+
         filesCurrentView = filesList;
-        ui->rightLayout->addWidget(filesList, 2, 0, 1, 3);
+        //    ui->rightLayout->addWidget(filesList, 2, 0, 1, 3);
         connect(filesCurrentView, &QAbstractItemView::doubleClicked, this, &MainWindow::fileSystemGoForward);
     }
+    filesList->setViewMode(QListView::ListMode);
 }
 
 void MainWindow::on_table_triggered()
 {
     if (filesCurrentView != filesTable) {
         disconnect(filesCurrentView, &QAbstractItemView::doubleClicked, this, &MainWindow::fileSystemGoForward);
-        cleanLayout(ui->rightLayout);
+        //  cleanLayout(ui->rightLayout);
+
         if (filesTable == nullptr) tableView();
+        ui->rightLayout->replaceWidget(filesCurrentView, filesTable);
+
         filesCurrentView = filesTable;
-        ui->rightLayout->addWidget(filesTable, 2, 0, 1, 3);
+        //  ui->rightLayout->addWidget(filesTable, 2, 0, 1, 3);
         connect(filesCurrentView, &QAbstractItemView::doubleClicked, this, &MainWindow::fileSystemGoForward);
     }
 }
 
-
 void MainWindow::on_icons_triggered()
 {
-    if (filesCurrentView == filesList) {
-        filesList->setViewMode(QListView::IconMode);
-    }
-    else {
-        disconnect(filesCurrentView, &QAbstractItemView::doubleClicked, this, &MainWindow::fileSystemGoForward);
-        cleanLayout(ui->rightLayout);
-        if (filesTable == nullptr) listView();
-        filesList->setViewMode(QListView::IconMode);
-        filesCurrentView = filesList;
-        ui->rightLayout->addWidget(filesList, 2, 0, 1, 3);
-        connect(filesCurrentView, &QAbstractItemView::doubleClicked, this, &MainWindow::fileSystemGoForward);
-    }
+    filesList->setViewMode(QListView::IconMode);
+    filesList->setIconSize(QSize(128, 128));
+    //  filesCurrentView = filesIcon;
 }
 
 void MainWindow::cleanLayout(QLayout *layout) {
@@ -257,6 +262,27 @@ void MainWindow::removeKebab() {
     }
 }
 
+void MainWindow::copy() {
+    QString sPath = getPathByCurrentModelIndex();
+    qDebug() << "Copy from" << sPath;
+}
+
+bool MainWindow::copyFile(const QString& from, const QString& to)
+{
+        bool success = QFile::copy(from, to);
+        if(!success) {
+                if(QFile(to).exists()) {
+                        if(QMessageBox::question(this, tr("Confirm overwrite"), tr("Really overwrite existing file(s)?"), QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
+                                if(!QFile::remove(to))
+                                        QMessageBox::critical(this, tr("Overwrite failed"), tr("Overwrite file(s) failed"));
+                                success = QFile::copy(from, to);
+                        }
+                }
+        }
+
+        return success;
+}
+
 void MainWindow::rename() {
 
     QString sPath = getPathByCurrentModelIndex();
@@ -292,9 +318,10 @@ void MainWindow::rename() {
 }
 
 void MainWindow::showProperties() {
-    QFileInfo *fInfo = new QFileInfo(getPathByCurrentModelIndex());
-    Properties propWin(this, fInfo);
-    propWin.exec();
+    QThread *props = new QThread();
+    Properties *propWin = new Properties(new QFileInfo(getPathByCurrentModelIndex()));
+    propWin->moveToThread(props);
+    propWin->exec();
 }
 
 void MainWindow::on_CreateFile_triggered()
@@ -368,7 +395,6 @@ void MainWindow::slotCustomMenuRequested(QPoint pos)
     QAction *pasteFileSystem = new QAction("Вставить");
     QAction *propertiesFileSystem = new QAction("Свойства");
 
-
     contextMenu->addAction(openFileSystem);
     contextMenu->addSeparator();
 
@@ -384,6 +410,7 @@ void MainWindow::slotCustomMenuRequested(QPoint pos)
     contextMenu->addAction(propertiesFileSystem);
 
     connect(openFileSystem, &QAction::triggered, this, &MainWindow::fileSystemGoForward);
+    connect(copyFileSystem, &QAction::triggered, this, &MainWindow::copy);
     connect(renameFileSystem, &QAction::triggered, this, &MainWindow::rename);
     connect(deleteFileSystem, &QAction::triggered, this, &MainWindow::removeKebab);
     connect(propertiesFileSystem, &QAction::triggered, this, &MainWindow::showProperties);
@@ -393,9 +420,7 @@ void MainWindow::slotCustomMenuRequested(QPoint pos)
 }
 
 QModelIndex MainWindow::getCurrentModelIndex() {
-    if(filesCurrentView != nullptr) {
-        return filesCurrentView->currentIndex();
-    }
+    return filesCurrentView->currentIndex();
 }
 
 QString MainWindow::getPathByCurrentModelIndex() {
@@ -406,3 +431,30 @@ bool MainWindow::checkNewName() {
     if ()
 }
 */
+
+void MainWindow::on_multSelection_stateChanged()
+{
+    if (ui->multSelection->isChecked()) enableMultSelection();
+    else disableMultSelection();
+}
+
+void MainWindow::enableMultSelection() {
+    multipleSelection = true;
+    if(filesCurrentView == filesList) {
+        filesList->setSelectionMode(QAbstractItemView::MultiSelection);
+    }
+    else {
+        filesTable->setSelectionMode(QAbstractItemView::MultiSelection);
+    }
+}
+
+void MainWindow::disableMultSelection() {
+    multipleSelection = false;
+    if(filesCurrentView == filesList) {
+        filesList->setSelectionMode(QAbstractItemView::SingleSelection);
+    }
+    else {
+        filesTable->setSelectionMode(QAbstractItemView::SingleSelection);
+    }
+    if (selectionModel != nullptr) selectionModel->clear();
+}

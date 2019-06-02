@@ -1,8 +1,7 @@
 #include "properties.h"
 #include "ui_properties.h"
 
-Properties::Properties(QWidget *parent, QFileInfo *fileSystemObject) :
-    QDialog(parent),
+Properties::Properties(QFileInfo *fileSystemObject) :
     ui(new Ui::Properties)
 {
     ui->setupUi(this);

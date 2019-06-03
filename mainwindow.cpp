@@ -14,7 +14,7 @@ MainWindow::MainWindow(QWidget *parent) :
     initFiles();
     initDirs();
     listView();
-   // tableView();
+    // tableView();
     initTree();
 
     dirPath = new QCompleter(files);
@@ -263,28 +263,37 @@ void MainWindow::removeKebab() {
 }
 
 void MainWindow::copy() {
-    QString sPath = getPathByCurrentModelIndex();
-    qDebug() << "Copy from" << sPath;
+    copySource = getPathByCurrentModelIndex();
+    qDebug() << "Copy from" << copySource;
+    /*
+     QFileInfo fPath(copySource);
+    if (fPath.isFile()) {
+
+
+    }
+    */
 }
 
 bool MainWindow::copyFile(const QString& from, const QString& to)
 {
-        bool success = QFile::copy(from, to);
-        if(!success) {
-                if(QFile(to).exists()) {
-                        if(QMessageBox::question(this, tr("Confirm overwrite"), tr("Really overwrite existing file(s)?"), QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
-                                if(!QFile::remove(to))
-                                        QMessageBox::critical(this, tr("Overwrite failed"), tr("Overwrite file(s) failed"));
-                                success = QFile::copy(from, to);
-                        }
-                }
+    bool success = QFile::copy(from, to);
+    if(!success) {
+        if(QFile(to).exists()) {
+            if(QMessageBox::question(this, tr("Confirm overwrite"), tr("Really overwrite existing file(s)?"), QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
+                if(!QFile::remove(to))
+                    QMessageBox::critical(this, tr("Overwrite failed"), tr("Overwrite file(s) failed"));
+                success = QFile::copy(from, to);
+            }
         }
+    }
+    return success;
+}
 
-        return success;
+void MainWindow::paste() {
+
 }
 
 void MainWindow::rename() {
-
     QString sPath = getPathByCurrentModelIndex();
     qDebug() << "ABS PATH" << sPath;
     QFileInfo fPath = sPath;
@@ -383,24 +392,40 @@ void MainWindow::getValidPath(QString &path) {
 }
 
 void MainWindow::slotCustomMenuRequested(QPoint pos)
-{
-    /* Создаем объект контекстного меню */
+{    
     QMenu * contextMenu = new QMenu(this);
+    bool isFolder;
+
+    QFileInfo currentPos(getPathByCurrentModelIndex());
+    if(currentPos.isDir()) isFolder = true;
+    else isFolder = false;
 
     QAction *openFileSystem = new QAction("Открыть");
     QAction *renameFileSystem = new QAction("Переименовать");
     QAction *copyFileSystem = new QAction("Копировать");
     QAction *cutFileSystem = new QAction("Вырезать");
     QAction *deleteFileSystem = new QAction("Удалить");
-    QAction *pasteFileSystem = new QAction("Вставить");
     QAction *propertiesFileSystem = new QAction("Свойства");
+    QAction *pasteFileSystem;
+
+    if (isFolder) {
+        pasteFileSystem = new QAction("Вставить");
+        if (copySource == nullptr) {
+            pasteFileSystem->setEnabled(false);
+        }
+    }
 
     contextMenu->addAction(openFileSystem);
     contextMenu->addSeparator();
 
     contextMenu->addAction(copyFileSystem);
     contextMenu->addAction(cutFileSystem);
-    contextMenu->addAction(pasteFileSystem);
+
+    if (isFolder) {
+        contextMenu->addAction(pasteFileSystem);
+        connect(pasteFileSystem, &QAction::triggered, this, &MainWindow::paste);
+    }
+
     contextMenu->addSeparator();
 
     contextMenu->addAction(renameFileSystem);
@@ -411,6 +436,7 @@ void MainWindow::slotCustomMenuRequested(QPoint pos)
 
     connect(openFileSystem, &QAction::triggered, this, &MainWindow::fileSystemGoForward);
     connect(copyFileSystem, &QAction::triggered, this, &MainWindow::copy);
+    //connect(cutFileSystem, &QAction::triggered, this, &MainWindow::cut);
     connect(renameFileSystem, &QAction::triggered, this, &MainWindow::rename);
     connect(deleteFileSystem, &QAction::triggered, this, &MainWindow::removeKebab);
     connect(propertiesFileSystem, &QAction::triggered, this, &MainWindow::showProperties);

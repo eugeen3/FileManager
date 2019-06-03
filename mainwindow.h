@@ -74,13 +74,17 @@ private:
     bool multipleSelection;
     QItemSelectionModel *selectionModel;
 
+    QString copySource;
+    QString copyDestination;
+   // bool ifPastePressed();
+
 private slots:
     void on_treeView_clicked(const QModelIndex &);
     void fileSystemGoForward();
 
     void copy();
     //void cut();
-    //void paste();
+    void paste();
     void rename();
     void removeKebab();
     void showProperties();

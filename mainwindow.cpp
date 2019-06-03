@@ -265,13 +265,6 @@ void MainWindow::removeKebab() {
 void MainWindow::copy() {
     copySource = getPathByCurrentModelIndex();
     qDebug() << "Copy from" << copySource;
-    /*
-     QFileInfo fPath(copySource);
-    if (fPath.isFile()) {
-
-
-    }
-    */
 }
 
 bool MainWindow::copyFile(const QString& from, const QString& to)
@@ -279,9 +272,9 @@ bool MainWindow::copyFile(const QString& from, const QString& to)
     bool success = QFile::copy(from, to);
     if(!success) {
         if(QFile(to).exists()) {
-            if(QMessageBox::question(this, tr("Confirm overwrite"), tr("Really overwrite existing file(s)?"), QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
+            if(QMessageBox::question(this, tr("Подтвердите перезапись"), tr("Перезаписать существующие фалйлы?"), QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
                 if(!QFile::remove(to))
-                    QMessageBox::critical(this, tr("Overwrite failed"), tr("Overwrite file(s) failed"));
+                    QMessageBox::critical(this, tr("Ошибка"), tr("Перезапись файлов не удалась"));
                 success = QFile::copy(from, to);
             }
         }
@@ -290,6 +283,23 @@ bool MainWindow::copyFile(const QString& from, const QString& to)
 }
 
 void MainWindow::paste() {
+    copyDestination = getPathByCurrentModelIndex();
+    QFileInfo fInfo(copySource);
+
+   QString fileName = fInfo.fileName();
+    copyDestination += "/" + fileName;
+    qDebug() << "Copy to" << copyDestination;
+    if (copySource != nullptr) {
+        QFileInfo type(copySource);
+        if (type.isDir()) {
+
+        } else if(type.isFile()) {
+            copyFile(copySource, copyDestination);
+            copyDestination = nullptr;
+        } else {
+
+        }
+    }
 
 }
 

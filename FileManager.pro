@@ -25,12 +25,14 @@ DEFINES += QT_DEPRECATED_WARNINGS
 CONFIG += c++11
 
 SOURCES += \
+        copier.cpp \
         dialogwindow.cpp \
         main.cpp \
         mainwindow.cpp \
         properties.cpp
 
 HEADERS += \
+        copier.h \
         dialogwindow.h \
         mainwindow.h \
         properties.h

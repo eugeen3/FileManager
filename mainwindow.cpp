@@ -24,12 +24,17 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->rightLayout->addWidget(filesCurrentView, 2, 0, 1, 3);
     ui->splitter->setStretchFactor(1, 1);
 
-    QLineEdit *lb = new QLineEdit("TEXT");
-    QProgressBar *prBar = new QProgressBar(this);
-    ui->statusBar->addWidget(lb);
+    prBar = new QProgressBar(this);
     ui->statusBar->addWidget(prBar);
+    cancel = new QPushButton(this);
+    cancel->setMinimumWidth(200);
+    cancel->setEnabled(false);
+    cancel->setText("");
+    ui->statusBar->addWidget(cancel);
 
-    connect(filesCurrentView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(slotCustomMenuRequested(QPoint)));
+    copier = new Copier();
+
+    connect(filesCurrentView, &QWidget::customContextMenuRequested, this, &MainWindow::slotCustomMenuRequested);
     connect(filesCurrentView, &QAbstractItemView::doubleClicked, this, &MainWindow::fileSystemGoForward);
     //connect(filesCurrentView, &QLineEdit::returnPressed, this, &MainWindow::fileSystemGoForward);
     connect(ui->goBack, &QPushButton::clicked, this, &MainWindow::dirUp);
@@ -126,7 +131,8 @@ void MainWindow::fileSystemGoForward()
         //Fix spaces and cyrillic symbols in path
 
         if (sPath.contains(" ")) {
-            std::string temp = '"' + sPath;
+            QString temp = sPath;
+            //std::string temp = '"' + sPath;
             sPath = temp += '"';
             qDebug() << "SPath " << sPath;
         }
@@ -263,62 +269,13 @@ void MainWindow::removeKebab() {
 }
 
 void MainWindow::copy() {
-    copySource = getPathByCurrentModelIndex();
-    qDebug() << "Copy from" << copySource;
-}
-
-bool MainWindow::copyFile(const QString& from, const QString& to)
-{
-    bool success = QFile::copy(from, to);
-    if(!success) {
-        if(QFile(to).exists()) {
-            if(QMessageBox::question(this, tr("Подтвердите перезапись"), tr("Перезаписать существующие фалйлы?"), QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
-                if(!QFile::remove(to))
-                    QMessageBox::critical(this, tr("Ошибка"), tr("Перезапись файлов не удалась"));
-                success = QFile::copy(from, to);
-            }
-        }
-    }
-    return success;
-}
-
-void  MainWindow::copyDir(const QString &src, const QString &dst)
-{
-    QDir dir(src);
-    if (! dir.exists())
-        return;
-
-    foreach (QString d, dir.entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
-        QString dst_path = dst + QDir::separator() + d;
-        dir.mkpath(dst_path);
-        copyDir(src+ QDir::separator() + d, dst_path);
-    }
-
-    foreach (QString f, dir.entryList(QDir::Files)) {
-        QFile::copy(src + QDir::separator() + f, dst + QDir::separator() + f);
-    }
+    copier->setSourcePath(getPathByCurrentModelIndex());
+    qDebug() << "Copy from" << getPathByCurrentModelIndex();
 }
 
 void MainWindow::paste() {
-    copyDestination = getPathByCurrentModelIndex();
-    QFileInfo fInfo(copySource);
-
-    qDebug() << "Copy to" << copyDestination;
-    if (copySource != nullptr) {
-        QFileInfo type(copySource);
-        if (type.isDir()) {
-            copyDir(copySource, copyDestination);
-            copyDestination = nullptr;
-        } else if(type.isFile()) {
-            QString fileName = fInfo.fileName();
-            copyDestination += "/" + fileName;
-            copyFile(copySource, copyDestination);
-            copyDestination = nullptr;
-        } else {
-
-        }
-    }
-
+    copier->setDestinationPath(getPathByCurrentModelIndex());
+    copier->startCopy();
 }
 
 void MainWindow::rename() {
@@ -434,13 +391,10 @@ void MainWindow::slotCustomMenuRequested(QPoint pos)
     QAction *cutFileSystem = new QAction("Вырезать");
     QAction *deleteFileSystem = new QAction("Удалить");
     QAction *propertiesFileSystem = new QAction("Свойства");
-    QAction *pasteFileSystem;
+    QAction *pasteFileSystem = new QAction("Вставить");
 
-    if (isFolder) {
-        pasteFileSystem = new QAction("Вставить");
-        if (copySource == nullptr) {
-            pasteFileSystem->setEnabled(false);
-        }
+    if (copier->getSourcePath() == nullptr) {
+        pasteFileSystem->setEnabled(false);
     }
 
     contextMenu->addAction(openFileSystem);
@@ -453,7 +407,6 @@ void MainWindow::slotCustomMenuRequested(QPoint pos)
         contextMenu->addAction(pasteFileSystem);
         connect(pasteFileSystem, &QAction::triggered, this, &MainWindow::paste);
     }
-
     contextMenu->addSeparator();
 
     contextMenu->addAction(renameFileSystem);
@@ -469,7 +422,6 @@ void MainWindow::slotCustomMenuRequested(QPoint pos)
     connect(deleteFileSystem, &QAction::triggered, this, &MainWindow::removeKebab);
     connect(propertiesFileSystem, &QAction::triggered, this, &MainWindow::showProperties);
 
-    /* Вызываем контекстное меню */
     contextMenu->popup(filesCurrentView->viewport()->mapToGlobal(pos));
 }
 
@@ -511,4 +463,8 @@ void MainWindow::disableMultSelection() {
         filesTable->setSelectionMode(QAbstractItemView::SingleSelection);
     }
     if (selectionModel != nullptr) selectionModel->clear();
+}
+
+QWidget* MainWindow::getParentWidget() {
+    return this;
 }

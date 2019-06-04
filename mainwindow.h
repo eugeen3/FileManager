@@ -7,6 +7,7 @@
 #include <Windows.h>
 #endif
 
+#include <copier.h>
 #include <dialogwindow.h>
 #include <properties.h>
 #include <QMainWindow>
@@ -55,10 +56,9 @@ public:
     QModelIndex getCurrentModelIndex();
     QString getPathByCurrentModelIndex();
     bool checkNewName(QString, QString, QObject, DialogWindow);
-    bool copyFile(const QString &, const QString &);
-    void copyDir(const QString &, const QString &);
     void enableMultSelection();
     void disableMultSelection();
+    QWidget* getParentWidget();
     //void keyPressEvent(QKeyEvent *);
 private:
     Ui::MainWindow *ui;
@@ -74,9 +74,9 @@ private:
     QCompleter *dirPath;
     bool multipleSelection;
     QItemSelectionModel *selectionModel;
-
-    QString copySource;
-    QString copyDestination;
+    Copier *copier;
+    QProgressBar *prBar;
+    QPushButton *cancel;
    // bool ifPastePressed();
 
 private slots:

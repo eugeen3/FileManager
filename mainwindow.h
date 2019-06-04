@@ -56,6 +56,7 @@ public:
     QString getPathByCurrentModelIndex();
     bool checkNewName(QString, QString, QObject, DialogWindow);
     bool copyFile(const QString &, const QString &);
+    void copyDir(const QString &, const QString &);
     void enableMultSelection();
     void disableMultSelection();
     //void keyPressEvent(QKeyEvent *);

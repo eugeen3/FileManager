@@ -126,7 +126,7 @@ void MainWindow::fileSystemGoForward()
         //Fix spaces and cyrillic symbols in path
 
         if (sPath.contains(" ")) {
-            QString temp = '"' + sPath;
+            std::string temp = '"' + sPath;
             sPath = temp += '"';
             qDebug() << "SPath " << sPath;
         }
@@ -250,12 +250,12 @@ void MainWindow::removeKebab() {
     if(fPath.isDir()) {
         QDir dir(sPath);
         if(!dir.removeRecursively()) {
-            QMessageBox::critical(this, "Delete", "Не удалось удалить указанную папку");
+            QMessageBox::critical(this, "Удаление", "Не удалось удалить указанную папку");
         }
     } else if(fPath.isFile()) {
         QFile file;
         if(!file.remove(sPath)) {
-            QMessageBox::critical(this, "Delete", "Не удалось удалить указанный файл");
+            QMessageBox::critical(this, "Удаление", "Не удалось удалить указанный файл");
         }
     } else {
         QMessageBox::critical(this, "FileManager", "Не удалось перейти по указаному пути");
@@ -282,18 +282,36 @@ bool MainWindow::copyFile(const QString& from, const QString& to)
     return success;
 }
 
+void  MainWindow::copyDir(const QString &src, const QString &dst)
+{
+    QDir dir(src);
+    if (! dir.exists())
+        return;
+
+    foreach (QString d, dir.entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
+        QString dst_path = dst + QDir::separator() + d;
+        dir.mkpath(dst_path);
+        copyDir(src+ QDir::separator() + d, dst_path);
+    }
+
+    foreach (QString f, dir.entryList(QDir::Files)) {
+        QFile::copy(src + QDir::separator() + f, dst + QDir::separator() + f);
+    }
+}
+
 void MainWindow::paste() {
     copyDestination = getPathByCurrentModelIndex();
     QFileInfo fInfo(copySource);
 
-   QString fileName = fInfo.fileName();
-    copyDestination += "/" + fileName;
     qDebug() << "Copy to" << copyDestination;
     if (copySource != nullptr) {
         QFileInfo type(copySource);
         if (type.isDir()) {
-
+            copyDir(copySource, copyDestination);
+            copyDestination = nullptr;
         } else if(type.isFile()) {
+            QString fileName = fInfo.fileName();
+            copyDestination += "/" + fileName;
             copyFile(copySource, copyDestination);
             copyDestination = nullptr;
         } else {

@@ -1,6 +1,7 @@
 #ifndef COPIER_H
 #define COPIER_H
 
+//#include <QMessageBox>
 #include <QString>
 #include <QThread>
 

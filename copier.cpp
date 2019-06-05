@@ -5,10 +5,11 @@ Copier::Copier()
 {
     copySource = nullptr;
     copyDestination = nullptr;
+    thread = new QThread();
 }
 
 Copier::~Copier() {
-    delete thread;
+   // delete thread;
 }
 
 bool Copier::copyFile(const QString& from, const QString& to)
@@ -47,16 +48,28 @@ void Copier::copyDir(const QString &src, const QString &dst)
 void Copier::paste()
 {
     QFileInfo fInfo(copySource);
-
+    MainWindow mw;
     qDebug() << "Copy to" << copyDestination;
     if (copySource != nullptr) {
         QFileInfo type(copySource);
         if (type.isDir()) {
-            copyDir(copySource, copyDestination);
+            QDir oldDir(copySource), newDir(copyDestination), tempDir(copyDestination);
+            //tempDir.setPath(copyDestination + QDir::separator() + oldDir.dirName());
+            newDir.setPath(copyDestination + QDir::separator() + oldDir.dirName());
+            if (newDir.exists()) {
+                if(QMessageBox::question(mw.getParentWidget(), "Подтвердите перезапись","Перезаписать существующие фалйлы?", QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
+                    if(!QFile::remove(newDir.absolutePath()))
+                        QMessageBox::critical(mw.getParentWidget(), "Ошибка", "Перезапись файлов не удалась");
+                }
+            }
+            else newDir.mkpath(oldDir.dirName());
+            qDebug() << "newDir" << newDir.absolutePath();
+            copyDir(copySource, newDir.absolutePath());
             copyDestination = nullptr;
-        } else if (type.isFile()) {
+        }
+        else if (type.isFile()) {
             QString fileName = fInfo.fileName();
-            copyDestination += "/" + fileName;
+            copyDestination += QDir::separator() + fileName;
             copyFile(copySource, copyDestination);
             copyDestination = nullptr;
         }
@@ -65,7 +78,7 @@ void Copier::paste()
 }
 
 void Copier::startCopy() {
-    thread = new QThread();
+    this->moveToThread(thread);
     qDebug() << "copy thread started";
     connect(thread, &QThread::started, this, &Copier::paste);
     connect(this, &Copier::copyFinished, thread, &QThread::quit);

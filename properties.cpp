@@ -6,29 +6,32 @@ Properties::Properties(QFileInfo *fileSystemObject) :
 {
     ui->setupUi(this);
 
+    files = 0;
+    dirs = 0;
 
     if (fileSystemObject->isFile()) {
         ui->typeLabel->setText("Тип файла:");
         ui->sizeInfo->setText(formatSize(fileSystemObject->size()) + "("
-            + QString::number(fileSystemObject->size()) + " байт)");
+                              + QString::number(fileSystemObject->size()) + " байт)");
 
         QLabel *createdLabel, *modifiedLabel, *readLabel;
-       // QLabel *createdInfo, *modifiedInfo, *readInfo;
+        // QLabel *createdInfo, *modifiedInfo, *readInfo;
         createdLabel = new QLabel("Создан");
         modifiedLabel = new QLabel("Изменён");
         readLabel = new QLabel("Открыт");
         //QDateTime createdTime = fileSystemObject->fileTime();
-       // createdInfo = new QLabel(.toString());
+        // createdInfo = new QLabel(.toString());
     } else if (fileSystemObject->isDir()) {
         ui->typeLabel->setText("Тип:");
         ui->typeInfo->setText("Папка с файлами");
         qint64 directorySize = dirSize(fileSystemObject->canonicalFilePath());
         ui->sizeInfo->setText(formatSize(directorySize) + " ("
-            + QString::number(directorySize) + " байт)");
+                              + QString::number(directorySize) + " байт)");
 
         QLabel *containsLabel, *containsInfo;
         containsLabel = new QLabel("Содержит:");
-        containsInfo = new QLabel(dirContains(fileSystemObject->canonicalFilePath()));
+        dirContains(fileSystemObject->canonicalFilePath());
+        containsInfo = new QLabel("Файлов: " + QString::number(files) + "; папок :" + QString::number(dirs));
         ui->gridLayout->addWidget(containsLabel, 5, 0);
         ui->gridLayout->addWidget(containsInfo, 5, 1);
     } else {
@@ -74,16 +77,15 @@ QString Properties::formatSize(qint64 size) {
 
 }
 
-QString Properties::dirContains(QString dirPath) {
-    //TODO
-    unsigned int files = 0, dirs = 0;
+void Properties::dirContains(QString dirPath) {
     QDir dir(dirPath);
     QDir dirF(dirPath);
-    dir.setFilter(QDir::Files | QDir::NoSymLinks);
-    files = dir.count();
-    dirF.setFilter(QDir::AllDirs | QDir::NoDotAndDotDot);
-    dirs = dirF.count();
+    dirF.setFilter(QDir::Files | QDir::NoDotAndDotDot);
+    files += dirF.count();
+    dir.setFilter(QDir::AllDirs | QDir::NoDotAndDotDot);
+    dirs += dir.count();
 
-    return QString("Файлов: " + QString::number(files)
-                   + "; папок :" + QString::number(dirs));
+    for(QString childDirPath : dir.entryList()) {
+        dirContains(dirPath + QDir::separator() + childDirPath);
+    }
 }

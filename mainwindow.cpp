@@ -53,7 +53,6 @@ void MainWindow::initFiles() {
     files = new QFileSystemModel(this);
     files->setFilter(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot);
     files->setRootPath(rootPath);
-    multipleSelection = false;
 }
 
 void MainWindow::initDirs() {
@@ -65,7 +64,7 @@ void MainWindow::initDirs() {
 void MainWindow::listView() {
     filesList = new QListView();
     filesList->setModel(files);
-    if (!multipleSelection) filesList->setSelectionMode(QAbstractItemView::SingleSelection);
+    filesList->setSelectionMode(QAbstractItemView::SingleSelection);
     filesList->setViewMode(QListView::ListMode);
     filesList->setContextMenuPolicy(Qt::CustomContextMenu);
 }
@@ -76,7 +75,7 @@ void MainWindow::tableView() {
     filesTable->verticalHeader()->hide();
     filesTable->setSortingEnabled(true);
     filesTable->setSelectionBehavior(QAbstractItemView::SelectRows);
-    if (multipleSelection) filesTable->setSelectionMode(QAbstractItemView::SingleSelection);
+    filesTable->setSelectionMode(QAbstractItemView::SingleSelection);
     filesTable->setContextMenuPolicy(Qt::CustomContextMenu);
 }
 
@@ -249,7 +248,7 @@ void MainWindow::on_searchInCurDir_returnPressed() {
 
 }
 
-void MainWindow::removeKebab() {
+void MainWindow::remove() {
     QString sPath = getPathByCurrentModelIndex();
     QFileInfo fPath = sPath;
 
@@ -263,14 +262,36 @@ void MainWindow::removeKebab() {
         if(!file.remove(sPath)) {
             QMessageBox::critical(this, "Удаление", "Не удалось удалить указанный файл");
         }
-    } else {
-        QMessageBox::critical(this, "FileManager", "Не удалось перейти по указаному пути");
     }
 }
 
 void MainWindow::copy() {
     copier->setSourcePath(getPathByCurrentModelIndex());
     qDebug() << "Copy from" << getPathByCurrentModelIndex();
+}
+
+void MainWindow::cut() {
+    isCutted = true;
+    copy();
+}
+
+void MainWindow::removeOld() {
+    if (isCutted == true) {
+        QString sPath = copier->getSourcePath();
+        QFileInfo fPath = sPath;
+
+        if(fPath.isDir()) {
+            QDir dir(sPath);
+            if(!dir.removeRecursively()) {
+                QMessageBox::critical(this, "Удаление", "Не удалось удалить указанную папку");
+            }
+        } else if(fPath.isFile()) {
+            QFile file;
+            if(!file.remove(sPath)) {
+                QMessageBox::critical(this, "Удаление", "Не удалось удалить указанный файл");
+            }
+        }
+    }
 }
 
 void MainWindow::paste() {
@@ -417,10 +438,11 @@ void MainWindow::slotCustomMenuRequested(QPoint pos)
 
     connect(openFileSystem, &QAction::triggered, this, &MainWindow::fileSystemGoForward);
     connect(copyFileSystem, &QAction::triggered, this, &MainWindow::copy);
-    //connect(cutFileSystem, &QAction::triggered, this, &MainWindow::cut);
+    connect(cutFileSystem, &QAction::triggered, this, &MainWindow::cut);
     connect(renameFileSystem, &QAction::triggered, this, &MainWindow::rename);
-    connect(deleteFileSystem, &QAction::triggered, this, &MainWindow::removeKebab);
+    connect(deleteFileSystem, &QAction::triggered, this, &MainWindow::remove);
     connect(propertiesFileSystem, &QAction::triggered, this, &MainWindow::showProperties);
+    connect(copier, &Copier::copyFinished, this, &MainWindow::removeOld);
 
     contextMenu->popup(filesCurrentView->viewport()->mapToGlobal(pos));
 }
@@ -437,33 +459,6 @@ bool MainWindow::checkNewName() {
     if ()
 }
 */
-
-void MainWindow::on_multSelection_stateChanged()
-{
-    if (ui->multSelection->isChecked()) enableMultSelection();
-    else disableMultSelection();
-}
-
-void MainWindow::enableMultSelection() {
-    multipleSelection = true;
-    if(filesCurrentView == filesList) {
-        filesList->setSelectionMode(QAbstractItemView::MultiSelection);
-    }
-    else {
-        filesTable->setSelectionMode(QAbstractItemView::MultiSelection);
-    }
-}
-
-void MainWindow::disableMultSelection() {
-    multipleSelection = false;
-    if(filesCurrentView == filesList) {
-        filesList->setSelectionMode(QAbstractItemView::SingleSelection);
-    }
-    else {
-        filesTable->setSelectionMode(QAbstractItemView::SingleSelection);
-    }
-    if (selectionModel != nullptr) selectionModel->clear();
-}
 
 QWidget* MainWindow::getParentWidget() {
     return this;

@@ -64,7 +64,7 @@ private:
     Ui::MainWindow *ui;
     QProcess *process;
     const QString rootPath;
-    const QString rootPathLabel = "Компьютер";
+    const QString rootPathLabel = "";
     QFileSystemModel *directories;
     QFileSystemModel *files;
     QTableView *filesTable;
@@ -72,11 +72,10 @@ private:
     //QListView *filesIcon;
     QAbstractItemView *filesCurrentView;
     QCompleter *dirPath;
-    bool multipleSelection;
-    QItemSelectionModel *selectionModel;
     Copier *copier;
     QProgressBar *prBar;
     QPushButton *cancel;
+    bool isCutted;
    // bool ifPastePressed();
 
 private slots:
@@ -84,10 +83,11 @@ private slots:
     void fileSystemGoForward();
 
     void copy();
-    //void cut();
+    void cut();
     void paste();
     void rename();
-    void removeKebab();
+    void removeOld();
+    void remove();
     void showProperties();
 
     void on_table_triggered();
@@ -100,8 +100,6 @@ private slots:
     void dirRoot();
     void slotCustomMenuRequested(QPoint);
     void on_icons_triggered();
-
-    void on_multSelection_stateChanged();
 
 signals:
     void enterPressed(const QModelIndex &);

@@ -9,22 +9,24 @@ Copier::Copier()
 }
 
 Copier::~Copier() {
-   // delete thread;
+    // delete thread;
 }
 
-bool Copier::copyFile(const QString& from, const QString& to)
+void Copier::copyFile(const QString& from, const QString& to)
 {
     bool success = QFile::copy(from, to);
     if(!success) {
-        /*if(QFile(to).exists()) {
-            if(QMessageBox::question(MainWindow::getParentWidget(), "Подтвердите перезапись","Перезаписать существующие фалйлы?", QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
+        if(QFile(to).exists()) {
+            QFile::remove(to);
+            QFile::copy(from, to);
+        }
+        /*if(QMessageBox::question(this, "Подтвердите перезапись","Перезаписать существующие фалйлы?", QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
                 if(!QFile::remove(to))
-                    QMessageBox::critical(MainWindow::getParentWidget(), "Ошибка", "Перезапись файлов не удалась");*/
+                    QMessageBox::critical(this, "Ошибка", "Перезапись файлов не удалась");
                 success = QFile::copy(from, to);
-            }
-    return success;
+            }*/
     }
-
+}
 
 
 void Copier::copyDir(const QString &src, const QString &dst)
@@ -33,15 +35,14 @@ void Copier::copyDir(const QString &src, const QString &dst)
     if (! dir.exists())
         return;
 
-    foreach (QString d, dir.entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
-        QString dst_path = dst + QDir::separator() + d;
+    foreach (QString curDir, dir.entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
+        QString dst_path = dst + QDir::separator() + curDir;
         dir.mkpath(dst_path);
-        copyDir(src+ QDir::separator() + d, dst_path);
+        copyDir(src+ QDir::separator() + curDir, dst_path);
     }
 
-    foreach (QString f, dir.entryList(QDir::Files)) {
-        QFile::copy(src + QDir::separator() + f, dst + QDir::separator() + f);
-       // MainWindow::setProgressBarCur(dirSize(copyDestination) / INT_MAX);
+    foreach (QString curFile, dir.entryList(QDir::Files)) {
+        Copier::copyFile(src + QDir::separator() + curFile, dst + QDir::separator() + curFile);
     }
 }
 
@@ -52,8 +53,6 @@ void Copier::paste()
     if (copySource != nullptr) {
         QFileInfo type(copySource);
         if (type.isDir()) {
-           // MainWindow::setProgressBarMin(0);
-          //  MainWindow::setProgressBarMax(dirSize(copySource)/ INT_MAX);
             QDir oldDir(copySource), newDir(copyDestination), tempDir(copyDestination);
             //tempDir.setPath(copyDestination + QDir::separator() + oldDir.dirName());
             newDir.setPath(copyDestination + QDir::separator() + oldDir.dirName());
@@ -64,15 +63,14 @@ void Copier::paste()
                         QMessageBox::critical(MainWindow::getParentWidget(), "Ошибка", "Перезапись файлов не удалась");
                 }
             }*/
-           // else
+            // else
             newDir.mkpath(oldDir.dirName());
             qDebug() << "newDir" << newDir.absolutePath();
             copyDir(copySource, newDir.absolutePath());
+            newDir.remove(newDir.absolutePath() + oldDir.dirName());
             copyDestination = nullptr;
         }
         else if (type.isFile()) {
-           // MainWindow::setProgressBarMin(0);
-           // MainWindow::setProgressBarMax(type.size() / INT_MAX);
             QString fileName = fInfo.fileName();
             copyDestination += QDir::separator() + fileName;
             copyFile(copySource, copyDestination);

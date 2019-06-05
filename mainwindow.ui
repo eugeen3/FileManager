@@ -192,16 +192,7 @@
     </property>
     <addaction name="CreateFile"/>
    </widget>
-   <widget class="QMenu" name="viewModel">
-    <property name="title">
-     <string>Вид</string>
-    </property>
-    <addaction name="list"/>
-    <addaction name="table"/>
-    <addaction name="icons"/>
-   </widget>
    <addaction name="createNew"/>
-   <addaction name="viewModel"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <attribute name="toolBarArea">

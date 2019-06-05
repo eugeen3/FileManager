@@ -17,7 +17,7 @@ private:
 public:
     Copier();
     ~Copier();
-    bool copyFile(const QString &, const QString &);
+    void copyFile(const QString &, const QString &);
     void copyDir(const QString &, const QString &);
     void paste();
     void startCopy();

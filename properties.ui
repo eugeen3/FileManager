@@ -32,61 +32,45 @@
    <string>Dialog</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="1" column="0">
-    <widget class="QLabel" name="typeLabel">
-     <property name="text">
-      <string/>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="0" rowspan="2">
-    <widget class="QLabel" name="pathLabel">
-     <property name="text">
-      <string>Расположение</string>
-     </property>
-    </widget>
-   </item>
-   <item row="4" column="0">
-    <widget class="QLabel" name="sizeLabel">
-     <property name="text">
-      <string>Размер</string>
-     </property>
-    </widget>
-   </item>
-   <item row="4" column="1">
+   <item row="3" column="1">
     <widget class="QLabel" name="sizeInfo">
      <property name="text">
       <string/>
      </property>
     </widget>
    </item>
-   <item row="1" column="1">
+   <item row="0" column="1">
     <widget class="QLabel" name="typeInfo">
      <property name="text">
       <string/>
      </property>
     </widget>
    </item>
-   <item row="2" column="1" rowspan="2">
-    <widget class="QLabel" name="pathInfo">
+   <item row="3" column="0">
+    <widget class="QLabel" name="sizeLabel">
+     <property name="text">
+      <string>Размер</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="0">
+    <widget class="QLabel" name="typeLabel">
      <property name="text">
       <string/>
      </property>
     </widget>
    </item>
-   <item row="0" column="0" colspan="2">
-    <widget class="QLineEdit" name="name">
-     <property name="minimumSize">
-      <size>
-       <width>0</width>
-       <height>25</height>
-      </size>
+   <item row="1" column="0" rowspan="2">
+    <widget class="QLabel" name="pathLabel">
+     <property name="text">
+      <string>Расположение</string>
      </property>
-     <property name="maximumSize">
-      <size>
-       <width>16777215</width>
-       <height>25</height>
-      </size>
+    </widget>
+   </item>
+   <item row="1" column="1" rowspan="2">
+    <widget class="QLabel" name="pathInfo">
+     <property name="text">
+      <string/>
      </property>
     </widget>
    </item>

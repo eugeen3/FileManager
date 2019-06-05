@@ -13,15 +13,14 @@ MainWindow::MainWindow(QWidget *parent) :
 
     initFiles();
     initDirs();
-    listView();
-    // tableView();
+    //listView();
+    tableView();
     initTree();
 
     dirPath = new QCompleter(files);
     ui->goToPath->setCompleter(dirPath);
     ui->goToPath->setText(rootPathLabel);
-    filesCurrentView = filesList;
-    ui->rightLayout->addWidget(filesCurrentView, 2, 0, 1, 3);
+    ui->rightLayout->addWidget(filesTable, 2, 0, 1, 3);
     ui->splitter->setStretchFactor(1, 1);
 
     prBar = new QProgressBar(this);
@@ -35,8 +34,8 @@ MainWindow::MainWindow(QWidget *parent) :
     copier = new Copier();
     prBarUpdater = new ProgressBarUpdater();
 
-    connect(filesCurrentView, &QWidget::customContextMenuRequested, this, &MainWindow::slotCustomMenuRequested);
-    connect(filesCurrentView, &QAbstractItemView::doubleClicked, this, &MainWindow::fileSystemGoForward);
+    connect(filesTable, &QWidget::customContextMenuRequested, this, &MainWindow::slotCustomMenuRequested);
+    connect(filesTable, &QAbstractItemView::doubleClicked, this, &MainWindow::fileSystemGoForward);
     //connect(filesCurrentView, &QLineEdit::returnPressed, this, &MainWindow::fileSystemGoForward);
     connect(ui->goBack, &QPushButton::clicked, this, &MainWindow::dirUp);
     connect(ui->toTheRoot, &QPushButton::clicked, this, &MainWindow::dirRoot);
@@ -61,7 +60,7 @@ void MainWindow::initDirs() {
     directories->setFilter(QDir::NoDotAndDotDot | QDir::AllDirs);
     directories->setRootPath(rootPath);
 }
-
+/*
 void MainWindow::listView() {
     filesList = new QListView();
     filesList->setModel(files);
@@ -69,7 +68,7 @@ void MainWindow::listView() {
     filesList->setViewMode(QListView::ListMode);
     filesList->setContextMenuPolicy(Qt::CustomContextMenu);
 }
-
+*/
 void MainWindow::tableView() {
     filesTable = new QTableView();
     filesTable->setModel(files);
@@ -90,10 +89,6 @@ void MainWindow::initTree() {
     ui->treeView->setContextMenuPolicy(Qt::CustomContextMenu);
 }
 
-void MainWindow::resetModelIndex(QModelIndex &index) {
-    //index = -1;
-}
-
 /*
 void MainWindow::keyPressEvent(QKeyEvent *keyEvent) {
     if (index.isValid()) {
@@ -108,7 +103,7 @@ void MainWindow::keyPressEvent(QKeyEvent *keyEvent) {
 void MainWindow::on_treeView_clicked(const QModelIndex &index)
 {
     QString path = directories->fileInfo(index).absoluteFilePath();
-    filesCurrentView->setRootIndex(files->setRootPath(path));
+    filesTable->setRootIndex(files->setRootPath(path));
     ui->goToPath->setText(path);
 }
 
@@ -123,31 +118,36 @@ void MainWindow::fileSystemGoForward()
 
     if(files->fileInfo(index).isDir()) {
         qDebug() << "STR" << sPath;
-        filesCurrentView->setRootIndex(files->setRootPath(sPath));
+        filesTable->setRootIndex(files->setRootPath(sPath));
         ui->goToPath->setText(sPath);
     }
     else if (files->fileInfo(index).isFile()) {
-        getValidPath(sPath);
+        //getValidPath(sPath);
         //Fix spaces and cyrillic symbols in path
 
-        if (sPath.contains(" ")) {
-            QString temp = sPath;
-            //std::string temp = '"' + sPath;
-            sPath = temp += '"';
-            qDebug() << "SPath " << sPath;
-        }
-        QString program;
-        QString initCmd;
 #ifdef __linux__
 
 #elif _WIN32
+        QString program;
+        QString initCmd;
+
+       if (sPath.contains(" ")) {
+            std::string temp = sPath.toUtf8().constData();
+           // std::string current_locale_text = qs.toLocal8Bit().constData();
+            //QString temp = sPath;
+            //std::string temp = '"' + const_cast<string>(sPath);
+            temp += '"';
+            std::string temp2 = '"' + temp;
+            sPath = QString::fromStdString(temp2);
+            qDebug() << "SPath " << sPath;
+        }
         program = "C:\\Windows\\System32\\cmd.exe";
         initCmd = "cmd /C";
         sPath.replace("/", "\\");
-#endif
         initCmd += sPath;
         process = new QProcess();
         QStringList args;
+#endif
         args.append(initCmd);
         qDebug() << "Open File" <<sPath;
         process->setProgram(program);
@@ -156,9 +156,10 @@ void MainWindow::fileSystemGoForward()
     }
 }
 
+/*
 void MainWindow::on_list_triggered()
 {
-    if (filesCurrentView != filesList) {
+    if (filesTable != filesList) {
         disconnect(filesCurrentView, &QAbstractItemView::doubleClicked, this, &MainWindow::fileSystemGoForward);
         // cleanLayout(ui->rightLayout);
 
@@ -205,6 +206,7 @@ void MainWindow::cleanLayout(QLayout *layout) {
         }
     }
 }
+*/
 
 void MainWindow::on_goToPath_returnPressed()
 {
@@ -220,11 +222,11 @@ void MainWindow::on_goToPath_returnPressed()
     qDebug() << "STR" << sPath;
     if(QString::compare(sPath, rootPathLabel, Qt::CaseInsensitive) == 0) {
         qDebug() << "GO TO ROOT";
-        filesCurrentView->setRootIndex(files->setRootPath(rootPath));
+        filesTable->setRootIndex(files->setRootPath(rootPath));
         return;
     }
     if (dPath.exists() && fPath.isDir()) {
-        filesCurrentView->setRootIndex(files->setRootPath(sPath));
+        filesTable->setRootIndex(files->setRootPath(sPath));
         ui->goToPath->setText(sPath);
     } else if (fPath.exists() && fPath.isFile()) {
         //Fix spaces and cyrillic symbols in path
@@ -343,9 +345,7 @@ void MainWindow::showProperties() {
 
 void MainWindow::on_CreateFile_triggered()
 {
-    DialogWindow dialogWindow(this, "Введите имя файла или папки", true);
-    dialogWindow.setModal(true);
-    dialogWindow.exec();
+
     //TODO
 }
 
@@ -353,23 +353,20 @@ void MainWindow::dirUp() {
     QDir dPath = files->rootDirectory();
     QString sPath = files->rootPath();
     if(dPath.cdUp()) {
-        int i = sPath.length();
-        for (; sPath[i] != '/'; i--) {
-            sPath[i] = sPath[i + 1];
-        }
+        sPath = sPath.section("/", 0, -2);
         qDebug() << "CDUP" << sPath;
-        filesCurrentView->setRootIndex(files->setRootPath(sPath));
+        filesTable->setRootIndex(files->setRootPath(sPath));
         ui->goToPath->setText(sPath);
     }
     else {
         dirRoot();
     }
-    filesCurrentView->update();
+    filesTable->update();
 }
 
 void MainWindow::dirRoot() {
     ui->goToPath->setText(rootPathLabel);
-    filesCurrentView->setRootIndex(files->setRootPath(rootPath));
+    filesTable->setRootIndex(files->setRootPath(rootPath));
 }
 
 void MainWindow::getValidPath(QString &path) {
@@ -446,35 +443,17 @@ void MainWindow::slotCustomMenuRequested(QPoint pos)
     connect(propertiesFileSystem, &QAction::triggered, this, &MainWindow::showProperties);
     connect(copier, &Copier::copyFinished, this, &MainWindow::removeOld);
 
-    contextMenu->popup(filesCurrentView->viewport()->mapToGlobal(pos));
+    contextMenu->popup(filesTable->viewport()->mapToGlobal(pos));
 }
 
 QModelIndex MainWindow::getCurrentModelIndex() {
-    return filesCurrentView->currentIndex();
+    return filesTable->currentIndex();
 }
 
 QString MainWindow::getPathByCurrentModelIndex() {
     return files->filePath(getCurrentModelIndex());
 }
-/*
-bool MainWindow::checkNewName() {
-    if ()
-}
-*/
 
 QWidget* MainWindow::getParentWidget() {
     return this;
 }
-/*
-void MainWindow::setProgressBarMin(int min) {
-    prBar->setMinimum(min);
-}
-
-void MainWindow::setProgressBarMax(int max) {
-    prBar->setMaximum(max);
-}
-
-void MainWindow::setProgressBarCur(int cur) {
-    prBar->setValue(cur);
-}
-*/

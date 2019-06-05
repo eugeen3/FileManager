@@ -11,19 +11,23 @@ Properties::Properties(QFileInfo *fileSystemObject) :
 
     if (fileSystemObject->isFile()) {
         ui->typeLabel->setText("Тип файла:");
+        ui->typeLabel->setText(fileSystemObject->completeSuffix());
+
         ui->sizeInfo->setText(formatSize(fileSystemObject->size()) + "("
                               + QString::number(fileSystemObject->size()) + " байт)");
 
-        QLabel *createdLabel, *modifiedLabel, *readLabel;
-        // QLabel *createdInfo, *modifiedInfo, *readInfo;
+        /*QLabel *createdLabel, *modifiedLabel, *readLabel;
+        QLabel *createdInfo, *modifiedInfo, *readInfo;
         createdLabel = new QLabel("Создан");
         modifiedLabel = new QLabel("Изменён");
         readLabel = new QLabel("Открыт");
-        //QDateTime createdTime = fileSystemObject->fileTime();
-        // createdInfo = new QLabel(.toString());
+        QDateTime createdTime = fileSystemObject->fileTime();
+        createdInfo = new QLabel(.toString());
+        */
     } else if (fileSystemObject->isDir()) {
         ui->typeLabel->setText("Тип:");
         ui->typeInfo->setText("Папка с файлами");
+
         qint64 directorySize = dirSize(fileSystemObject->canonicalFilePath());
         ui->sizeInfo->setText(formatSize(directorySize) + " ("
                               + QString::number(directorySize) + " байт)");
@@ -42,10 +46,6 @@ Properties::Properties(QFileInfo *fileSystemObject) :
     ui->pathInfo->setText(fileSystemObject->canonicalPath());
 }
 
-Properties::Properties() {
-
-}
-
 Properties::~Properties()
 {
     delete ui;
@@ -55,15 +55,13 @@ qint64 Properties::dirSize(QString dirPath) {
     qint64 size = 0;
     QDir dir(dirPath);
 
-    QDir::Filters fileFilters = QDir::Files|QDir::System|QDir::Hidden;
-    for(QString filePath : dir.entryList(fileFilters)) {
+    for(QString filePath : dir.entryList(QDir::Files|QDir::System|QDir::Hidden)) {
         QFileInfo fi(dir, filePath);
-        size+= fi.size();
+        size += fi.size();
     }
 
-    QDir::Filters dirFilters = QDir::Dirs|QDir::NoDotAndDotDot|QDir::System|QDir::Hidden;
-    for(QString childDirPath : dir.entryList(dirFilters)) {
-        size+= dirSize(dirPath + QDir::separator() + childDirPath);
+    for(QString childDirPath : dir.entryList(QDir::Dirs|QDir::NoDotAndDotDot|QDir::System|QDir::Hidden)) {
+        size += dirSize(dirPath + QDir::separator() + childDirPath);
     }
 
     return size;
@@ -82,8 +80,7 @@ QString Properties::formatSize(qint64 size) {
 }
 
 void Properties::dirContains(QString dirPath) {
-    QDir dir(dirPath);
-    QDir dirF(dirPath);
+    QDir dir(dirPath), dirF(dirPath);
     dirF.setFilter(QDir::Files | QDir::NoDotAndDotDot);
     files += dirF.count();
     dir.setFilter(QDir::AllDirs | QDir::NoDotAndDotDot);

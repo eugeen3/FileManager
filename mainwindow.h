@@ -45,15 +45,13 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
-    void listView();
     void tableView();
     void initFiles();
     void initDirs();
     void initTree();
-    void cleanLayout(QLayout*);
+    //void cleanLayout(QLayout*);
     QWidget* getFilesWidget();
     void getValidPath(QString &);
-    void resetModelIndex(QModelIndex &);
     QModelIndex getCurrentModelIndex();
     QString getPathByCurrentModelIndex();
     void checkNewName();
@@ -72,9 +70,6 @@ private:
     QFileSystemModel *directories;
     QFileSystemModel *files;
     QTableView *filesTable;
-    QListView *filesList;
-    //QListView *filesIcon;
-    QAbstractItemView *filesCurrentView;
     QCompleter *dirPath;
     Copier *copier;
     ProgressBarUpdater *prBarUpdater;
@@ -83,8 +78,6 @@ private:
     QString oldName;
     QString newName;
     QProgressBar *prBar;
-
-   // bool ifPastePressed();
 
 private slots:
     void on_treeView_clicked(const QModelIndex &);
@@ -98,15 +91,11 @@ private slots:
     void remove();
     void showProperties();
 
-    void on_table_triggered();
-    void on_list_triggered();
-
     void on_goToPath_returnPressed();
     void on_CreateFile_triggered();
     void dirUp();
     void dirRoot();
     void slotCustomMenuRequested(QPoint);
-    void on_icons_triggered();
 
 signals:
     void enterPressed(const QModelIndex &);

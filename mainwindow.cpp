@@ -33,6 +33,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->statusBar->addWidget(cancel);
 
     copier = new Copier();
+    prBarUpdater = new ProgressBarUpdater();
 
     connect(filesCurrentView, &QWidget::customContextMenuRequested, this, &MainWindow::slotCustomMenuRequested);
     connect(filesCurrentView, &QAbstractItemView::doubleClicked, this, &MainWindow::fileSystemGoForward);
@@ -244,10 +245,6 @@ void MainWindow::on_goToPath_returnPressed()
     }
 }
 
-void MainWindow::on_searchInCurDir_returnPressed() {
-
-}
-
 void MainWindow::remove() {
     QString sPath = getPathByCurrentModelIndex();
     QFileInfo fPath = sPath;
@@ -295,41 +292,46 @@ void MainWindow::removeOld() {
 }
 
 void MainWindow::paste() {
+    prBar->setMinimum(0);
     copier->setDestinationPath(getPathByCurrentModelIndex());
+    prBar->setMaximum(static_cast<int>(prBarUpdater->getSourceSize()));
     copier->startCopy();
 }
 
+void MainWindow::setPrBarCurVal() {
+    while(prBarUpdater->checkState()) {
+        prBar->setValue(static_cast<int>(prBarUpdater->getDestinationSize()));
+    }
+}
+
 void MainWindow::rename() {
-    QString sPath = getPathByCurrentModelIndex();
-    qDebug() << "ABS PATH" << sPath;
-    QFileInfo fPath = sPath;
-    QString newName, oldName = sPath;
-
-    DialogWindow dialogWindow(this, "Введите имя файла", true);
-    dialogWindow.setModal(true);
-    dialogWindow.exec();
-
+    oldName = getPathByCurrentModelIndex();
+    ui->searchInCurDir->setText(oldName);
+    QFileInfo fPath = oldName;
+    qDebug() << "ABS PATH" << oldName;
+    QString newName;
     if (fPath.isDir()) {
         QDir directory;
-        QString rawFileName = dialogWindow.getLineEditText();
-        newName = sPath.section("/", 0, -2) + "/" + rawFileName;
-
-        while(!directory.rename(oldName, newName)) {
-            dialogWindow.setText("Ошибка переименования");
-
-        }
+        QString rawFileName;
+        newName = oldName.section("/", 0, -2) + "/" + rawFileName;
     }
     else if (fPath.isFile()) {
         QFile file;
         QString rawFileName = "name312312312.txt";
 
-        newName = sPath.section("/", 0, -2) + "/" + rawFileName;
+        newName = oldName.section("/", 0, -2) + "/" + rawFileName;
         if(!file.rename(oldName, newName)) {
             QMessageBox::critical(this, "Rename", "Rename error");
         }
     } else {
         QMessageBox::critical(this, "FileManager", "Не удалось перейти по указаному пути");
     }
+}
+
+void MainWindow::checkNewName() {
+   /* while(!rename(oldName, ui->searchInCurDir->text())) {
+          QMessageBox::critical(this, "Rename", "Rename error");
+    }*/
 }
 
 void MainWindow::showProperties() {
@@ -463,3 +465,16 @@ bool MainWindow::checkNewName() {
 QWidget* MainWindow::getParentWidget() {
     return this;
 }
+/*
+void MainWindow::setProgressBarMin(int min) {
+    prBar->setMinimum(min);
+}
+
+void MainWindow::setProgressBarMax(int max) {
+    prBar->setMaximum(max);
+}
+
+void MainWindow::setProgressBarCur(int cur) {
+    prBar->setValue(cur);
+}
+*/

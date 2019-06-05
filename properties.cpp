@@ -42,6 +42,10 @@ Properties::Properties(QFileInfo *fileSystemObject) :
     ui->pathInfo->setText(fileSystemObject->canonicalPath());
 }
 
+Properties::Properties() {
+
+}
+
 Properties::~Properties()
 {
     delete ui;

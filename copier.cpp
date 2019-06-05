@@ -14,19 +14,18 @@ Copier::~Copier() {
 
 bool Copier::copyFile(const QString& from, const QString& to)
 {
-    MainWindow mw;
     bool success = QFile::copy(from, to);
     if(!success) {
-        if(QFile(to).exists()) {
-            if(QMessageBox::question(mw.getParentWidget(), "Подтвердите перезапись","Перезаписать существующие фалйлы?", QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
+        /*if(QFile(to).exists()) {
+            if(QMessageBox::question(MainWindow::getParentWidget(), "Подтвердите перезапись","Перезаписать существующие фалйлы?", QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
                 if(!QFile::remove(to))
-                    QMessageBox::critical(mw.getParentWidget(), "Ошибка", "Перезапись файлов не удалась");
+                    QMessageBox::critical(MainWindow::getParentWidget(), "Ошибка", "Перезапись файлов не удалась");*/
                 success = QFile::copy(from, to);
             }
-        }
-    }
     return success;
-}
+    }
+
+
 
 void Copier::copyDir(const QString &src, const QString &dst)
 {
@@ -42,32 +41,38 @@ void Copier::copyDir(const QString &src, const QString &dst)
 
     foreach (QString f, dir.entryList(QDir::Files)) {
         QFile::copy(src + QDir::separator() + f, dst + QDir::separator() + f);
+       // MainWindow::setProgressBarCur(dirSize(copyDestination) / INT_MAX);
     }
 }
 
 void Copier::paste()
 {
     QFileInfo fInfo(copySource);
-    MainWindow mw;
     qDebug() << "Copy to" << copyDestination;
     if (copySource != nullptr) {
         QFileInfo type(copySource);
         if (type.isDir()) {
+           // MainWindow::setProgressBarMin(0);
+          //  MainWindow::setProgressBarMax(dirSize(copySource)/ INT_MAX);
             QDir oldDir(copySource), newDir(copyDestination), tempDir(copyDestination);
             //tempDir.setPath(copyDestination + QDir::separator() + oldDir.dirName());
             newDir.setPath(copyDestination + QDir::separator() + oldDir.dirName());
-            if (newDir.exists()) {
-                if(QMessageBox::question(mw.getParentWidget(), "Подтвердите перезапись","Перезаписать существующие фалйлы?", QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
+            /*if (newDir.exists()) {
+                if(QMessageBox::question(MainWindow::getParentWidget(), "Подтвердите перезапись","Перезаписать существующие фалйлы?",
+                                         QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
                     if(!QFile::remove(newDir.absolutePath()))
-                        QMessageBox::critical(mw.getParentWidget(), "Ошибка", "Перезапись файлов не удалась");
+                        QMessageBox::critical(MainWindow::getParentWidget(), "Ошибка", "Перезапись файлов не удалась");
                 }
-            }
-            else newDir.mkpath(oldDir.dirName());
+            }*/
+           // else
+            newDir.mkpath(oldDir.dirName());
             qDebug() << "newDir" << newDir.absolutePath();
             copyDir(copySource, newDir.absolutePath());
             copyDestination = nullptr;
         }
         else if (type.isFile()) {
+           // MainWindow::setProgressBarMin(0);
+           // MainWindow::setProgressBarMax(type.size() / INT_MAX);
             QString fileName = fInfo.fileName();
             copyDestination += QDir::separator() + fileName;
             copyFile(copySource, copyDestination);
@@ -82,7 +87,9 @@ void Copier::startCopy() {
     qDebug() << "copy thread started";
     connect(thread, &QThread::started, this, &Copier::paste);
     connect(this, &Copier::copyFinished, thread, &QThread::quit);
+    connect(this, &Copier::copyFinished, this, &Copier::changeState);
     connect(thread, &QThread::finished, thread, &QThread::deleteLater);
+    isFinished = false;
     thread->start();
 }
 
@@ -100,4 +107,9 @@ QString Copier::getSourcePath() {
 
 QString Copier::getDestinationPath() {
     return copyDestination;
+}
+
+void Copier::changeState() {
+    qDebug() << "Copy is finished";
+    isFinished = true;
 }

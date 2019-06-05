@@ -7,6 +7,7 @@
 #include <Windows.h>
 #endif
 
+#include <progressbarupdater.h>
 #include <copier.h>
 #include <dialogwindow.h>
 #include <properties.h>
@@ -55,10 +56,13 @@ public:
     void resetModelIndex(QModelIndex &);
     QModelIndex getCurrentModelIndex();
     QString getPathByCurrentModelIndex();
-    bool checkNewName(QString, QString, QObject, DialogWindow);
-    void enableMultSelection();
-    void disableMultSelection();
+    void checkNewName();
+    void setPrBarCurVal();
     QWidget* getParentWidget();
+    //void setProgressBarMin(int);
+   // void setProgressBarMax(int);
+   // void setProgressBarCur(int);
+   // QProgressBar& getProgressBar();
     //void keyPressEvent(QKeyEvent *);
 private:
     Ui::MainWindow *ui;
@@ -73,9 +77,13 @@ private:
     QAbstractItemView *filesCurrentView;
     QCompleter *dirPath;
     Copier *copier;
-    QProgressBar *prBar;
+    ProgressBarUpdater *prBarUpdater;
     QPushButton *cancel;
     bool isCutted;
+    QString oldName;
+    QString newName;
+    QProgressBar *prBar;
+
    // bool ifPastePressed();
 
 private slots:
@@ -94,7 +102,6 @@ private slots:
     void on_list_triggered();
 
     void on_goToPath_returnPressed();
-    void on_searchInCurDir_returnPressed();
     void on_CreateFile_triggered();
     void dirUp();
     void dirRoot();

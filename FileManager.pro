@@ -29,12 +29,14 @@ SOURCES += \
         dialogwindow.cpp \
         main.cpp \
         mainwindow.cpp \
+        progressbarupdater.cpp \
         properties.cpp
 
 HEADERS += \
         copier.h \
         dialogwindow.h \
         mainwindow.h \
+        progressbarupdater.h \
         properties.h
 
 FORMS += \

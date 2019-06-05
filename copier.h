@@ -9,8 +9,10 @@ class Copier : public QObject
 {
     Q_OBJECT
 protected:
+    bool isFinished;
     QString copySource;
     QString copyDestination;
+private:
     QThread *thread;
 public:
     Copier();
@@ -25,6 +27,8 @@ public:
     QString getSourcePath();
 signals:
     void copyFinished();
+private slots:
+    void changeState();
 };
 
 #endif // COPIER_H

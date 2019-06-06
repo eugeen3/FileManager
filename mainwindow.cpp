@@ -79,18 +79,13 @@ void MainWindow::on_treeView_clicked(const QModelIndex &index)
 void MainWindow::fileSystemGoForward()
 {
     const QModelIndex index = getCurrentModelIndex();
-    QString sPath = files->fileInfo(index).absoluteFilePath();
-    QTextCodec *codec_1251 = QTextCodec::codecForName("Windows-1251");
-    QByteArray baPath = sPath.toUtf8();
-    QString string = codec_1251->toUnicode(baPath);
+    QString sPath = getPathByCurrentModelIndex();
 
     if(files->fileInfo(index).isDir()) {
         filesTable->setRootIndex(files->setRootPath(sPath));
         ui->goToPath->setText(sPath);
     }
-    else if (files->fileInfo(index).isFile()) {
-        openFile(sPath);
-    }
+    else openFile(sPath);
 }
 
 void MainWindow::on_goToPath_returnPressed()
@@ -98,10 +93,6 @@ void MainWindow::on_goToPath_returnPressed()
     QString sPath = ui->goToPath->text();
     QDir dPath = ui->goToPath->text();
     QFileInfo fPath = ui->goToPath->text();
-
-    QTextCodec *codec_1251 = QTextCodec::codecForName("Windows-1251");
-    QByteArray baPath = sPath.toUtf8();
-    QString string = codec_1251->toUnicode(baPath);
 
     if(QString::compare(sPath, rootPathLabel, Qt::CaseInsensitive) == 0) {
         filesTable->setRootIndex(files->setRootPath(rootPath));
@@ -112,7 +103,6 @@ void MainWindow::on_goToPath_returnPressed()
         ui->goToPath->setText(sPath);
     } else if (fPath.exists() && fPath.isFile()) {
         openFile(sPath);
-        QDesktopServices::openUrl(sPath);
     } else {
         QMessageBox::critical(this, "FileManager", "Не удалось перейти по указаному пути");
     }
@@ -226,14 +216,13 @@ void MainWindow::dirUp() {
     QDir dPath = files->rootDirectory();
     QString sPath = files->rootPath();
     if(dPath.cdUp()) {
-        sPath = sPath.section("/", 0, -2);
+        sPath = sPath.section("/", 0, -2) + "/";
         filesTable->setRootIndex(files->setRootPath(sPath));
         ui->goToPath->setText(sPath);
     }
     else {
         dirRoot();
     }
-    filesTable->update();
 }
 
 void MainWindow::dirRoot() {

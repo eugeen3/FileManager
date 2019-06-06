@@ -7,6 +7,7 @@
 #include <Windows.h>
 #endif
 
+#include <QDebug>
 #include <copier.h>
 #include <properties.h>
 #include <QMainWindow>

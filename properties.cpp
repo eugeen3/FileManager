@@ -71,8 +71,9 @@ QString Properties::formatSize(qint64 size) {
 void Properties::dirContains(QString dirPath) {
     QDir dir(dirPath), dirF(dirPath);
     dirF.setFilter(QDir::Files | QDir::NoDotAndDotDot);
-    files += dirF.count();
     dir.setFilter(QDir::AllDirs | QDir::NoDotAndDotDot);
+
+    files += dirF.count();
     dirs += dir.count();
 
     for(QString childDirPath : dir.entryList()) {

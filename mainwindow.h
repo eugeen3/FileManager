@@ -9,7 +9,6 @@
 
 #include <progressbarupdater.h>
 #include <copier.h>
-#include <dialogwindow.h>
 #include <properties.h>
 #include <QMainWindow>
 #include <QHBoxLayout>
@@ -49,19 +48,14 @@ public:
     void initFiles();
     void initDirs();
     void initTree();
-    //void cleanLayout(QLayout*);
     QWidget* getFilesWidget();
-    void getValidPath(QString &);
+    void openFile(QString);
     QModelIndex getCurrentModelIndex();
     QString getPathByCurrentModelIndex();
-    void checkNewName();
     void setPrBarCurVal();
     QWidget* getParentWidget();
-    //void setProgressBarMin(int);
-   // void setProgressBarMax(int);
-   // void setProgressBarCur(int);
-   // QProgressBar& getProgressBar();
-    //void keyPressEvent(QKeyEvent *);
+    void createNew();
+    void keyPressEvent(QKeyEvent *keyEvent);
 private:
     Ui::MainWindow *ui;
     QProcess *process;
@@ -75,6 +69,7 @@ private:
     ProgressBarUpdater *prBarUpdater;
     QPushButton *cancel;
     bool isCutted;
+    bool creating;
     QString oldName;
     QString newName;
     QProgressBar *prBar;
@@ -87,15 +82,17 @@ private slots:
     void cut();
     void paste();
     void rename();
+    void checkNewName();
     void removeOld();
     void remove();
     void showProperties();
 
     void on_goToPath_returnPressed();
-    void on_CreateFile_triggered();
     void dirUp();
     void dirRoot();
     void slotCustomMenuRequested(QPoint);
+    void lineEditUsingFor();
+    void createNewTriggered();
 
 signals:
     void enterPressed(const QModelIndex &);

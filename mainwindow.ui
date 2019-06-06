@@ -141,7 +141,7 @@
            </widget>
           </item>
           <item row="0" column="0" colspan="3">
-           <widget class="QLineEdit" name="searchInCurDir">
+           <widget class="QLineEdit" name="nameEdit">
             <property name="minimumSize">
              <size>
               <width>0</width>
@@ -188,9 +188,10 @@
    </property>
    <widget class="QMenu" name="createNew">
     <property name="title">
-     <string>Файл</string>
+     <string>Создать</string>
     </property>
-    <addaction name="CreateFile"/>
+    <addaction name="createFile"/>
+    <addaction name="createDir"/>
    </widget>
    <addaction name="createNew"/>
   </widget>
@@ -203,24 +204,14 @@
    </attribute>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
-  <action name="CreateFile">
+  <action name="createFile">
    <property name="text">
-    <string>Создать новый</string>
+    <string>Новый файл</string>
    </property>
   </action>
-  <action name="list">
+  <action name="createDir">
    <property name="text">
-    <string>Список</string>
-   </property>
-  </action>
-  <action name="table">
-   <property name="text">
-    <string>Таблица</string>
-   </property>
-  </action>
-  <action name="icons">
-   <property name="text">
-    <string>Иконки</string>
+    <string>Новую папку</string>
    </property>
   </action>
  </widget>

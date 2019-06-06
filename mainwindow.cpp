@@ -1,6 +1,5 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "dialogwindow.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -34,14 +33,14 @@ MainWindow::MainWindow(QWidget *parent) :
     copier = new Copier();
     prBarUpdater = new ProgressBarUpdater();
 
+    creating = false;
+    connect(ui->createFile, &QAction::triggered, this, createNewTriggered);
+    connect(ui->createDir, &QAction::triggered, this, createNewTriggered);
+    connect(ui->nameEdit, &QLineEdit::returnPressed, this, lineEditUsingFor);
     connect(filesTable, &QWidget::customContextMenuRequested, this, &MainWindow::slotCustomMenuRequested);
     connect(filesTable, &QAbstractItemView::doubleClicked, this, &MainWindow::fileSystemGoForward);
-    //connect(filesCurrentView, &QLineEdit::returnPressed, this, &MainWindow::fileSystemGoForward);
     connect(ui->goBack, &QPushButton::clicked, this, &MainWindow::dirUp);
     connect(ui->toTheRoot, &QPushButton::clicked, this, &MainWindow::dirRoot);
-
-    //connect(filesCurrentView, &MainWindow::enterPressed, this, &MainWindow::fileSystemGoForward);
-    //connect(filesCurrentView, &MainWindow::deletePressed, this, &MainWindow::removeKebab);
 }
 
 MainWindow::~MainWindow()
@@ -60,15 +59,7 @@ void MainWindow::initDirs() {
     directories->setFilter(QDir::NoDotAndDotDot | QDir::AllDirs);
     directories->setRootPath(rootPath);
 }
-/*
-void MainWindow::listView() {
-    filesList = new QListView();
-    filesList->setModel(files);
-    filesList->setSelectionMode(QAbstractItemView::SingleSelection);
-    filesList->setViewMode(QListView::ListMode);
-    filesList->setContextMenuPolicy(Qt::CustomContextMenu);
-}
-*/
+
 void MainWindow::tableView() {
     filesTable = new QTableView();
     filesTable->setModel(files);
@@ -89,16 +80,14 @@ void MainWindow::initTree() {
     ui->treeView->setContextMenuPolicy(Qt::CustomContextMenu);
 }
 
-/*
+
 void MainWindow::keyPressEvent(QKeyEvent *keyEvent) {
-    if (index.isValid()) {
-        switch (keyEvent->key()) {
-            case Qt::Key_Enter : emit enterPressed(index);
-            case Qt::Key_Delete : emit deletePressed(index);
-        }
+    switch (keyEvent->key()) {
+        case Qt::Key_Enter : fileSystemGoForward();
+        //case Qt::Key_Delete : emit deletePressed();
     }
 }
-*/
+
 
 void MainWindow::on_treeView_clicked(const QModelIndex &index)
 {
@@ -122,91 +111,9 @@ void MainWindow::fileSystemGoForward()
         ui->goToPath->setText(sPath);
     }
     else if (files->fileInfo(index).isFile()) {
-        //getValidPath(sPath);
-        //Fix spaces and cyrillic symbols in path
-
-#ifdef __linux__
-
-#elif _WIN32
-        QString program;
-        QString initCmd;
-
-       if (sPath.contains(" ")) {
-            std::string temp = sPath.toUtf8().constData();
-           // std::string current_locale_text = qs.toLocal8Bit().constData();
-            //QString temp = sPath;
-            //std::string temp = '"' + const_cast<string>(sPath);
-            temp += '"';
-            std::string temp2 = '"' + temp;
-            sPath = QString::fromStdString(temp2);
-            qDebug() << "SPath " << sPath;
-        }
-        program = "C:\\Windows\\System32\\cmd.exe";
-        initCmd = "cmd /C";
-        sPath.replace("/", "\\");
-        initCmd += sPath;
-        process = new QProcess();
-        QStringList args;
-#endif
-        args.append(initCmd);
-        qDebug() << "Open File" <<sPath;
-        process->setProgram(program);
-        process->setArguments(args);
-        process->startDetached();
+        openFile(sPath);
     }
 }
-
-/*
-void MainWindow::on_list_triggered()
-{
-    if (filesTable != filesList) {
-        disconnect(filesCurrentView, &QAbstractItemView::doubleClicked, this, &MainWindow::fileSystemGoForward);
-        // cleanLayout(ui->rightLayout);
-
-        if (filesList == nullptr) listView();
-        ui->rightLayout->replaceWidget(filesCurrentView, filesList);
-
-        filesCurrentView = filesList;
-        //    ui->rightLayout->addWidget(filesList, 2, 0, 1, 3);
-        connect(filesCurrentView, &QAbstractItemView::doubleClicked, this, &MainWindow::fileSystemGoForward);
-    }
-    filesList->setViewMode(QListView::ListMode);
-}
-
-void MainWindow::on_table_triggered()
-{
-    if (filesCurrentView != filesTable) {
-        disconnect(filesCurrentView, &QAbstractItemView::doubleClicked, this, &MainWindow::fileSystemGoForward);
-        //  cleanLayout(ui->rightLayout);
-
-        if (filesTable == nullptr) tableView();
-        ui->rightLayout->replaceWidget(filesCurrentView, filesTable);
-
-        filesCurrentView = filesTable;
-        //  ui->rightLayout->addWidget(filesTable, 2, 0, 1, 3);
-        connect(filesCurrentView, &QAbstractItemView::doubleClicked, this, &MainWindow::fileSystemGoForward);
-    }
-}
-
-void MainWindow::on_icons_triggered()
-{
-    filesList->setViewMode(QListView::IconMode);
-    filesList->setIconSize(QSize(128, 128));
-    //  filesCurrentView = filesIcon;
-}
-
-void MainWindow::cleanLayout(QLayout *layout) {
-    if (layout) {
-        if(layout->count() > 3){
-            QLayoutItem *item = layout->takeAt(3);
-            QWidget* widget = item->widget();
-            if(widget)
-                delete widget;
-            delete item;
-        }
-    }
-}
-*/
 
 void MainWindow::on_goToPath_returnPressed()
 {
@@ -229,17 +136,7 @@ void MainWindow::on_goToPath_returnPressed()
         filesTable->setRootIndex(files->setRootPath(sPath));
         ui->goToPath->setText(sPath);
     } else if (fPath.exists() && fPath.isFile()) {
-        //Fix spaces and cyrillic symbols in path
-
-        /*
-                QUrl uPath;
-                uPath.QUrl::setUrl(sPath);
-                qDebug() << uPath;
-                if (!QUrl(sPath).isValid()) {
-                    qDebug() << "Invalid";
-                    getValidPath(sPath);
-                }
-                */
+        openFile(sPath);
         qDebug() << "Open File in LineEdit" <<sPath;
         QDesktopServices::openUrl(sPath);
     } else {
@@ -308,32 +205,51 @@ void MainWindow::setPrBarCurVal() {
 
 void MainWindow::rename() {
     oldName = getPathByCurrentModelIndex();
-    ui->searchInCurDir->setText(oldName);
+    ui->nameEdit->setText(oldName);
+}
+
+void MainWindow::createNew() {
+    QString name = ui->nameEdit->text();
+    if (!name.contains(".")) {
+        QDir newDir(ui->goToPath->text() + QDir::separator() + name);
+        if (newDir.exists()) {
+            ui->nameEdit->clear();
+            QMessageBox::critical(this, "Ошибка переименования", "Папка с указанным именем уже существует");
+        }
+        else newDir.mkdir(ui->goToPath->text() + QDir::separator() + name);
+    }
+    else {
+        QFile newFile(ui->goToPath->text() + QDir::separator() + name);
+        if (newFile.exists()) {
+            ui->nameEdit->clear();
+            QMessageBox::critical(this, "Ошибка переименования", "Папка с указанным именем уже существует");
+        }
+        else {
+            newFile.open(QIODevice::WriteOnly);
+        }
+    }
+    ui->nameEdit->clear();
+    creating = false;
+}
+
+void MainWindow::checkNewName() {
     QFileInfo fPath = oldName;
     qDebug() << "ABS PATH" << oldName;
     QString newName;
     if (fPath.isDir()) {
         QDir directory;
-        QString rawFileName;
-        newName = oldName.section("/", 0, -2) + "/" + rawFileName;
+        if(!directory.rename(oldName, ui->nameEdit->text())) {
+            ui->nameEdit->setText(oldName);
+            QMessageBox::critical(this, "Ошибка переименования", "Папка с указанным именем уже существует");
+        }
     }
     else if (fPath.isFile()) {
         QFile file;
-        QString rawFileName = "name312312312.txt";
-
-        newName = oldName.section("/", 0, -2) + "/" + rawFileName;
-        if(!file.rename(oldName, newName)) {
-            QMessageBox::critical(this, "Rename", "Rename error");
+        if(!file.rename(oldName, ui->nameEdit->text())) {
+            ui->nameEdit->setText(oldName);
+            QMessageBox::critical(this, "Ошибка переименования", "Файл с указанным именем уже существует");
         }
-    } else {
-        QMessageBox::critical(this, "FileManager", "Не удалось перейти по указаному пути");
     }
-}
-
-void MainWindow::checkNewName() {
-   /* while(!rename(oldName, ui->searchInCurDir->text())) {
-          QMessageBox::critical(this, "Rename", "Rename error");
-    }*/
 }
 
 void MainWindow::showProperties() {
@@ -341,12 +257,6 @@ void MainWindow::showProperties() {
     Properties *propWin = new Properties(new QFileInfo(getPathByCurrentModelIndex()));
     propWin->moveToThread(props);
     propWin->exec();
-}
-
-void MainWindow::on_CreateFile_triggered()
-{
-
-    //TODO
 }
 
 void MainWindow::dirUp() {
@@ -369,7 +279,7 @@ void MainWindow::dirRoot() {
     filesTable->setRootIndex(files->setRootPath(rootPath));
 }
 
-void MainWindow::getValidPath(QString &path) {
+void MainWindow::openFile(QString path) {
 #ifdef __linux__
     size_t found = path.find("%20");
     if (found != std::string::npos) {
@@ -391,9 +301,31 @@ void MainWindow::getValidPath(QString &path) {
     }
     qDebug() << path;
 #elif _WIN32
-    //Fix for WIN
+    QString program;
+    QString initCmd;
 
+    if (path.contains(" ")) {
+        std::string temp = path.toUtf8().constData();
+        // std::string current_locale_text = qs.toLocal8Bit().constData();
+        //QString temp = sPath;
+        //std::string temp = '"' + const_cast<string>(sPath);
+        temp += '"';
+        std::string temp2 = '"' + temp;
+        path = QString::fromStdString(temp2);
+        qDebug() << "SPath " << path;
+    }
+    program = "C:\\Windows\\System32\\cmd.exe";
+    initCmd = "cmd /C";
+    path.replace("/", "\\");
+    initCmd += path;
+    process = new QProcess();
+    QStringList args;
 #endif
+    args.append(initCmd);
+    qDebug() << "Open File" <<path;
+    process->setProgram(program);
+    process->setArguments(args);
+    process->startDetached();
 }
 
 void MainWindow::slotCustomMenuRequested(QPoint pos)
@@ -454,6 +386,16 @@ QString MainWindow::getPathByCurrentModelIndex() {
     return files->filePath(getCurrentModelIndex());
 }
 
-QWidget* MainWindow::getParentWidget() {
-    return this;
+void MainWindow::lineEditUsingFor() {
+    if (creating) createNew();
+    else checkNewName();
+}
+
+void MainWindow::createNewTriggered()
+{
+    ui->nameEdit->clear();
+    QFocusEvent* eventFocus = new QFocusEvent(QEvent::FocusIn);
+    qApp->postEvent(ui->nameEdit, (QEvent *)eventFocus, Qt::LowEventPriority);
+    ui->nameEdit->grabKeyboard();
+    creating = true;
 }

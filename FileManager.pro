@@ -26,7 +26,6 @@ CONFIG += c++11
 
 SOURCES += \
         copier.cpp \
-        dialogwindow.cpp \
         main.cpp \
         mainwindow.cpp \
         progressbarupdater.cpp \
@@ -34,13 +33,11 @@ SOURCES += \
 
 HEADERS += \
         copier.h \
-        dialogwindow.h \
         mainwindow.h \
         progressbarupdater.h \
         properties.h
 
 FORMS += \
-        dialogwindow.ui \
         mainwindow.ui \
         properties.ui
 

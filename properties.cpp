@@ -10,8 +10,7 @@ Properties::Properties(QFileInfo *fileSystemObject) :
     dirs = 0;
 
     if (fileSystemObject->isFile()) {
-        ui->typeLabel->setText("Тип файла:");
-        ui->typeLabel->setText(fileSystemObject->completeSuffix());
+        ui->typeInfo->setText('.' + fileSystemObject->fileName().section(".", -1) + " файл");
 
         ui->sizeInfo->setText(formatSize(fileSystemObject->size()) + "("
                               + QString::number(fileSystemObject->size()) + " байт)");
@@ -25,7 +24,6 @@ Properties::Properties(QFileInfo *fileSystemObject) :
         createdInfo = new QLabel(.toString());
         */
     } else if (fileSystemObject->isDir()) {
-        ui->typeLabel->setText("Тип:");
         ui->typeInfo->setText("Папка с файлами");
 
         qint64 directorySize = dirSize(fileSystemObject->canonicalFilePath());

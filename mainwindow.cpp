@@ -8,11 +8,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     QString rootPath = QDir::rootPath();
-    //QString rootPathLabel = "Компьютер";
 
     initFiles();
     initDirs();
-    //listView();
     tableView();
     initTree();
 
@@ -22,16 +20,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->rightLayout->addWidget(filesTable, 2, 0, 1, 3);
     ui->splitter->setStretchFactor(1, 1);
 
-    prBar = new QProgressBar(this);
-    ui->statusBar->addWidget(prBar);
-    cancel = new QPushButton(this);
-    cancel->setMinimumWidth(200);
-    cancel->setEnabled(false);
-    cancel->setText("");
-    ui->statusBar->addWidget(cancel);
-
     copier = new Copier();
-    prBarUpdater = new ProgressBarUpdater();
 
     creating = false;
     connect(ui->createFile, &QAction::triggered, this, createNewTriggered);
@@ -80,15 +69,6 @@ void MainWindow::initTree() {
     ui->treeView->setContextMenuPolicy(Qt::CustomContextMenu);
 }
 
-
-void MainWindow::keyPressEvent(QKeyEvent *keyEvent) {
-    switch (keyEvent->key()) {
-        case Qt::Key_Enter : fileSystemGoForward();
-        //case Qt::Key_Delete : emit deletePressed();
-    }
-}
-
-
 void MainWindow::on_treeView_clicked(const QModelIndex &index)
 {
     QString path = directories->fileInfo(index).absoluteFilePath();
@@ -103,10 +83,8 @@ void MainWindow::fileSystemGoForward()
     QTextCodec *codec_1251 = QTextCodec::codecForName("Windows-1251");
     QByteArray baPath = sPath.toUtf8();
     QString string = codec_1251->toUnicode(baPath);
-    qDebug() << "BAPATH" << baPath;
 
     if(files->fileInfo(index).isDir()) {
-        qDebug() << "STR" << sPath;
         filesTable->setRootIndex(files->setRootPath(sPath));
         ui->goToPath->setText(sPath);
     }
@@ -124,11 +102,8 @@ void MainWindow::on_goToPath_returnPressed()
     QTextCodec *codec_1251 = QTextCodec::codecForName("Windows-1251");
     QByteArray baPath = sPath.toUtf8();
     QString string = codec_1251->toUnicode(baPath);
-    qDebug() << "BAPATH" << baPath;
 
-    qDebug() << "STR" << sPath;
     if(QString::compare(sPath, rootPathLabel, Qt::CaseInsensitive) == 0) {
-        qDebug() << "GO TO ROOT";
         filesTable->setRootIndex(files->setRootPath(rootPath));
         return;
     }
@@ -137,7 +112,6 @@ void MainWindow::on_goToPath_returnPressed()
         ui->goToPath->setText(sPath);
     } else if (fPath.exists() && fPath.isFile()) {
         openFile(sPath);
-        qDebug() << "Open File in LineEdit" <<sPath;
         QDesktopServices::openUrl(sPath);
     } else {
         QMessageBox::critical(this, "FileManager", "Не удалось перейти по указаному пути");
@@ -163,7 +137,6 @@ void MainWindow::remove() {
 
 void MainWindow::copy() {
     copier->setSourcePath(getPathByCurrentModelIndex());
-    qDebug() << "Copy from" << getPathByCurrentModelIndex();
 }
 
 void MainWindow::cut() {
@@ -191,16 +164,8 @@ void MainWindow::removeOld() {
 }
 
 void MainWindow::paste() {
-    prBar->setMinimum(0);
     copier->setDestinationPath(getPathByCurrentModelIndex());
-    prBar->setMaximum(static_cast<int>(prBarUpdater->getSourceSize()));
     copier->startCopy();
-}
-
-void MainWindow::setPrBarCurVal() {
-    while(prBarUpdater->checkState()) {
-        prBar->setValue(static_cast<int>(prBarUpdater->getDestinationSize()));
-    }
 }
 
 void MainWindow::rename() {
@@ -214,7 +179,7 @@ void MainWindow::createNew() {
         QDir newDir(ui->goToPath->text() + QDir::separator() + name);
         if (newDir.exists()) {
             ui->nameEdit->clear();
-            QMessageBox::critical(this, "Ошибка переименования", "Папка с указанным именем уже существует");
+            QMessageBox::critical(this, "Ошибка создания", "Папка с указанным именем уже существует");
         }
         else newDir.mkdir(ui->goToPath->text() + QDir::separator() + name);
     }
@@ -222,10 +187,11 @@ void MainWindow::createNew() {
         QFile newFile(ui->goToPath->text() + QDir::separator() + name);
         if (newFile.exists()) {
             ui->nameEdit->clear();
-            QMessageBox::critical(this, "Ошибка переименования", "Папка с указанным именем уже существует");
+            QMessageBox::critical(this, "Ошибка создания", "Папка с указанным именем уже существует");
         }
         else {
             newFile.open(QIODevice::WriteOnly);
+            newFile.close();
         }
     }
     ui->nameEdit->clear();
@@ -234,7 +200,6 @@ void MainWindow::createNew() {
 
 void MainWindow::checkNewName() {
     QFileInfo fPath = oldName;
-    qDebug() << "ABS PATH" << oldName;
     QString newName;
     if (fPath.isDir()) {
         QDir directory;
@@ -253,9 +218,7 @@ void MainWindow::checkNewName() {
 }
 
 void MainWindow::showProperties() {
-    QThread *props = new QThread();
     Properties *propWin = new Properties(new QFileInfo(getPathByCurrentModelIndex()));
-    propWin->moveToThread(props);
     propWin->exec();
 }
 
@@ -264,7 +227,6 @@ void MainWindow::dirUp() {
     QString sPath = files->rootPath();
     if(dPath.cdUp()) {
         sPath = sPath.section("/", 0, -2);
-        qDebug() << "CDUP" << sPath;
         filesTable->setRootIndex(files->setRootPath(sPath));
         ui->goToPath->setText(sPath);
     }
@@ -299,20 +261,12 @@ void MainWindow::openFile(QString path) {
             }
         }
     }
-    qDebug() << path;
 #elif _WIN32
     QString program;
     QString initCmd;
 
     if (path.contains(" ")) {
-        std::string temp = path.toUtf8().constData();
-        // std::string current_locale_text = qs.toLocal8Bit().constData();
-        //QString temp = sPath;
-        //std::string temp = '"' + const_cast<string>(sPath);
-        temp += '"';
-        std::string temp2 = '"' + temp;
-        path = QString::fromStdString(temp2);
-        qDebug() << "SPath " << path;
+
     }
     program = "C:\\Windows\\System32\\cmd.exe";
     initCmd = "cmd /C";
@@ -322,7 +276,6 @@ void MainWindow::openFile(QString path) {
     QStringList args;
 #endif
     args.append(initCmd);
-    qDebug() << "Open File" <<path;
     process->setProgram(program);
     process->setArguments(args);
     process->startDetached();

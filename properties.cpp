@@ -14,15 +14,6 @@ Properties::Properties(QFileInfo *fileSystemObject) :
 
         ui->sizeInfo->setText(formatSize(fileSystemObject->size()) + "("
                               + QString::number(fileSystemObject->size()) + " байт)");
-
-        /*QLabel *createdLabel, *modifiedLabel, *readLabel;
-        QLabel *createdInfo, *modifiedInfo, *readInfo;
-        createdLabel = new QLabel("Создан");
-        modifiedLabel = new QLabel("Изменён");
-        readLabel = new QLabel("Открыт");
-        QDateTime createdTime = fileSystemObject->fileTime();
-        createdInfo = new QLabel(.toString());
-        */
     } else if (fileSystemObject->isDir()) {
         ui->typeInfo->setText("Папка с файлами");
 

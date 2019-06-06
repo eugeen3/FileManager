@@ -1,7 +1,6 @@
 #ifndef COPIER_H
 #define COPIER_H
 
-//#include <QMessageBox>
 #include <QString>
 #include <QThread>
 
@@ -9,7 +8,6 @@ class Copier : public QObject
 {
     Q_OBJECT
 protected:
-    bool isFinished;
     QString copySource;
     QString copyDestination;
 private:
@@ -27,8 +25,6 @@ public:
     QString getSourcePath();
 signals:
     void copyFinished();
-private slots:
-    void changeState();
 };
 
 #endif // COPIER_H

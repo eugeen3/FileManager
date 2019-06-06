@@ -7,7 +7,6 @@
 #include <Windows.h>
 #endif
 
-#include <progressbarupdater.h>
 #include <copier.h>
 #include <properties.h>
 #include <QMainWindow>
@@ -18,9 +17,7 @@
 #include <QUrl>
 #include <QTableView>
 #include <QTreeView>
-#include <QListView>
 #include <QMessageBox>
-#include <QtDebug>
 #include <qlistview.h>
 #include <cstring>
 #include <algorithm>
@@ -29,7 +26,6 @@
 #include <QCompleter>
 #include <QKeyEvent>
 #include <QPoint>
-#include <QProgressBar>
 #include <QProcess>
 #include <QThread>
 
@@ -48,14 +44,11 @@ public:
     void initFiles();
     void initDirs();
     void initTree();
-    QWidget* getFilesWidget();
     void openFile(QString);
     QModelIndex getCurrentModelIndex();
     QString getPathByCurrentModelIndex();
-    void setPrBarCurVal();
-    QWidget* getParentWidget();
     void createNew();
-    void keyPressEvent(QKeyEvent *keyEvent);
+
 private:
     Ui::MainWindow *ui;
     QProcess *process;
@@ -66,13 +59,10 @@ private:
     QTableView *filesTable;
     QCompleter *dirPath;
     Copier *copier;
-    ProgressBarUpdater *prBarUpdater;
-    QPushButton *cancel;
     bool isCutted;
     bool creating;
     QString oldName;
     QString newName;
-    QProgressBar *prBar;
 
 private slots:
     void on_treeView_clicked(const QModelIndex &);
@@ -93,10 +83,6 @@ private slots:
     void slotCustomMenuRequested(QPoint);
     void lineEditUsingFor();
     void createNewTriggered();
-
-signals:
-    void enterPressed(const QModelIndex &);
-    void deletePressed(const QModelIndex &);
 };
 
 #endif // MAINWINDOW_H

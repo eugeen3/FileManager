@@ -85,7 +85,10 @@ void MainWindow::fileSystemGoForward()
         filesTable->setRootIndex(files->setRootPath(sPath));
         ui->goToPath->setText(sPath);
     }
-    else openFile(sPath);
+    else {
+        QUrl *filePath = new QUrl("file:///" + sPath);
+        QDesktopServices::openUrl(*filePath);
+    }
 }
 
 void MainWindow::on_goToPath_returnPressed()
@@ -102,7 +105,8 @@ void MainWindow::on_goToPath_returnPressed()
         filesTable->setRootIndex(files->setRootPath(sPath));
         ui->goToPath->setText(sPath);
     } else if (fPath.exists() && fPath.isFile()) {
-        openFile(sPath);
+        QUrl *filePath = new QUrl("file:///" + sPath);
+        QDesktopServices::openUrl(*filePath);
     } else {
         QMessageBox::critical(this, "FileManager", "Не удалось перейти по указаному пути");
     }
@@ -228,46 +232,6 @@ void MainWindow::dirUp() {
 void MainWindow::dirRoot() {
     ui->goToPath->setText(rootPathLabel);
     filesTable->setRootIndex(files->setRootPath(rootPath));
-}
-
-void MainWindow::openFile(QString path) {
-#ifdef __linux__
-    size_t found = path.find("%20");
-    if (found != std::string::npos) {
-        int i = found;
-        while (i != path.length()) {
-            size_t found = path.find("%20");
-            if (found != std::string::npos) {
-                i = found;
-                path[i] = '\\';    i++;
-                path[i] = ' ';          i++;
-                for (int j = i; j < path.length(); j++) {
-                    path[j] = path[j + 1];
-                }
-            }
-            else {
-                break;
-            }
-        }
-    }
-#elif _WIN32
-    QString program;
-    QString initCmd;
-
-    if (path.contains(" ")) {
-
-    }
-    program = "C:\\Windows\\System32\\cmd.exe";
-    initCmd = "cmd /C";
-    path.replace("/", "\\");
-    initCmd += path;
-    process = new QProcess();
-    QStringList args;
-#endif
-    args.append(initCmd);
-    process->setProgram(program);
-    process->setArguments(args);
-    process->startDetached();
 }
 
 void MainWindow::slotCustomMenuRequested(QPoint pos)

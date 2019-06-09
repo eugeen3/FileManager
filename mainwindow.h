@@ -45,7 +45,6 @@ public:
     void initFiles();
     void initDirs();
     void initTree();
-    void openFile(QString);
     QModelIndex getCurrentModelIndex();
     QString getPathByCurrentModelIndex();
     void createNew();
